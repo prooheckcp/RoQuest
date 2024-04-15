@@ -1,0 +1,100 @@
+*Enums*
+
+- QuestStatus
+    - Description
+        Contains the current status of our quest. Important to address the progress
+
+    - Values
+        - NotStarted -- Player hasn't accepted this quest yet
+        - InProgress -- The quest is currently in progress by the Player
+        - Completed -- Quest has been completed but is yet to be delivered
+        - Delivered -- Quest is completed and delivered
+
+- QuestAcceptType
+    - Description
+        Determines the behavior on how should this quest be accepted by a player
+
+
+    - Values
+        - Automatic -- If it should automatically accept the quest if it finds it to be available
+        - Manual -- The developer sets the behavior on how this quest should be accepted
+
+- QuestDeliverType
+    - Description
+        Determines the behavior on how should this quest be delivered by a player
+
+    - Values
+        - Automatic -- Should automatically deliver the quest as soon as it is completed
+        - Manual -- The developer sets the behavior on how this quest should be delivered
+
+- QuestRepeatableType
+    - Description
+        This determines if the quest is repeatable and if yes then which rules should it follow
+
+    - Values
+        NonRepeatable -- Cannot repeat this quest
+        Daily -- Can repeat it once per day (resets every 22 hours)
+        Weekly -- Can repeat it once per week (resets ever 6 days + 22 hours)
+        Custom -- Is repeatable but it must be enabled again by the developer
+
+*Classes*
+
+- Objective
+    - Description
+        Objective contain the objective for our quest and all the relevant static data
+        for it to be displayed to the user
+
+    - Properties
+        - ObjectiveId: string -- The ID that will be used by our module managers to update the objective
+        - Description: string -- The description of this objective
+
+- QuestObjective
+    - Description
+        Contains the progress and goal for our quest. This will determine whether the user has completed the quest
+        or not
+
+    - Functions
+        - Add: (amount: number) -> () -- Adds to the current progress by the amount
+        - Remove: (amount: number) -> () -- Removes the current progress by the amount
+        - Set: (newAmount: number) -> () -- Sets the current progress to this amount
+        - IsCompleted: () -> boolean -- Returns whether this objective has been completed or not
+        - _CheckProgress: () -> () -- Checks the progress of our quest objective and sets completed to true if needed
+
+    - Properties
+        - CurrentProgress: number -- The current progress
+        - TargetProgress: number -- The required amount to reach our target progress
+        - Objective: Objective -- Pointer to our static data
+        - _Completed: boolean -- If the quest has been completed already or not
+
+- QuestLifeCycle
+    - Description
+        This contains all the behavior of our quests. It's within this class that we should
+        code how our quest behaves
+
+- Quest
+    - Description
+        This is the main class of the library as it contains all the relevant data of a quest. It contains
+        how the quest is called, how it is managed, what objectives are required and etc.
+
+    - Functions
+        - GetQuestStatus: () -> QuestStatus -- Gets the current quest status
+        - CanStart: () -> boolean -- If the player can or cannot start the quest
+        - GetFirstCompletedTick: () -> number? -- First time the player completed the quest. Will return nil if never
+        - GetLastCompletedTick: () -> number? -- Last time the player completed the quest. Will return nil if never
+        - _GetSavingFormat: () -> {[string]: any} -- Returns a hash map with all the data required to save in a data store
+
+    - Properties
+        - Name: string -- The name of our quest
+        - Description: string -- The Description of our quest
+        - QuestId: string -- A unique identifier for our quest
+        - QuestAcceptType: QuestAcceptType -- Determines the behavior for how the quest is accepted
+        - QuestDeliverType: QuestDeliverType -- Determines the behavior for how the quest is delivered
+        - QuestRepeatableType: QuestRepeatableType -- If the quest is repeatable or not
+        - RequiredQuests: {string} -- An array of strings with the required QuestIds in order for this quest to be allowed to be given to a player
+
+        // Data below will be saved
+        - QuestObjectives: {QuestObjective} -- An array with all the objectives required to complete this quest
+        - _QuestStatus: QuestStatus -- Current status of our quest
+        - _CompletedCount: number -- Amount of times that this quest has been completed
+        - _FirstCompletedTick: number? -- UTC of the first time that this quest has been repeated
+        - _LastCompletedTick: number? -- UTC of the last time that this quest has been repeated
