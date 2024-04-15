@@ -48,7 +48,9 @@ This file contains the structure for our classes and enums
 
     - Properties
         - ObjectiveId: string -- The ID that will be used by our module managers to update the objective
+        - Name: string -- The name of our objective
         - Description: string -- The description of this objective
+        - CustomData: {[string]: any} -- Contains any sort of custom data that the developer might want to add to it
 
 - QuestObjective
     - Description
@@ -67,6 +69,7 @@ This file contains the structure for our classes and enums
         - CurrentProgress: number -- The current progress
         - TargetProgress: number -- The required amount to reach our target progress
         - Objective: Objective -- Pointer to our static data
+        - CustomData: {[string]: any} -- Contains any sort of custom data that the developer might want to add to it
         - _Completed: boolean -- If the quest has been completed already or not
 
 - QuestLifeCycle
@@ -99,8 +102,11 @@ This file contains the structure for our classes and enums
         - QuestAcceptType: QuestAcceptType -- Determines the behavior for how the quest is accepted
         - QuestDeliverType: QuestDeliverType -- Determines the behavior for how the quest is delivered
         - QuestRepeatableType: QuestRepeatableType -- If the quest is repeatable or not
+        - QuestStart: number? -- This property allows the developer to set a date at which the quest becomes available. This means the quest cannot be accepted before this time UTC
+        - QuestEnd: number? -- Similar to quest start this allows the develoepr to set a date at which the quest becomes unavailable. This means that the quest can no longer be accepted/completed after this date UTC
         - RequiredQuests: {string} -- An array of strings with the required QuestIds in order for this quest to be allowed to be given to a player
         - LifeCycles: {string} -- An array of strings with the IDs of our quest lifecycles. 
+        - CustomData: {[string]: any} -- Contains any sort of custom data that the developer might want to add to it
 
         // Data below will be saved
         - QuestObjectives: {QuestObjective} -- An array with all the objectives required to complete this quest
