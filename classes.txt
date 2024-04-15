@@ -52,6 +52,19 @@ This file contains the structure for our classes and enums
         - Description: string -- The description of this objective
         - CustomData: {[string]: any} -- Contains any sort of custom data that the developer might want to add to it
 
+- QuestObjectiveProgress
+    - Description
+        Contains the dynamic data for our quest objectives
+
+    - Functions
+        TO DO
+
+    - Properties
+        - CurrentProgress: number -- The current progress
+        - TargetProgress: number -- The required amount to reach our target progress
+        - _Completed: boolean -- If the quest has been completed already or not
+
+
 - QuestObjective
     - Description
         Contains the progress and goal for our quest. This will determine whether the user has completed the quest
@@ -62,15 +75,26 @@ This file contains the structure for our classes and enums
         - Remove: (amount: number) -> () -- Removes the current progress by the amount
         - Set: (newAmount: number) -> () -- Sets the current progress to this amount
         - IsCompleted: () -> boolean -- Returns whether this objective has been completed or not
+        - Objective: Objective -- The objective static data for this object
         - _CheckProgress: () -> () -- Checks the progress of our quest objective and sets completed to true if needed
         - _GetSavingFormat: () -> {[string]: any} -- Returns a hash map with all the data required to save in a data store
 
     - Properties
-        - CurrentProgress: number -- The current progress
-        - TargetProgress: number -- The required amount to reach our target progress
+        - QuestObjectiveProgress: QuestObjectiveProgress -- The dynamic data that determines the progress of our quest
         - Objective: Objective -- Pointer to our static data
         - CustomData: {[string]: any} -- Contains any sort of custom data that the developer might want to add to it
-        - _Completed: boolean -- If the quest has been completed already or not
+
+- QuestProgress
+    - Description
+        Contains all the data that is dynamic and player specific. This is the data that should be stored by
+        the developer on his desired DataStore system
+
+    - Properties
+        - _QuestObjectiveProgresses: {QuestObjectiveProgress} -- The progress of our quest objectives for this quest
+        - _QuestStatus: QuestStatus -- Current status of our quest
+        - _CompletedCount: number -- Amount of times that this quest has been completed
+        - _FirstCompletedTick: number? -- UTC of the first time that this quest has been repeated
+        - _LastCompletedTick: number? -- UTC of the last time that this quest has been repeated
 
 - QuestLifeCycle
     - Description
@@ -107,10 +131,7 @@ This file contains the structure for our classes and enums
         - RequiredQuests: {string} -- An array of strings with the required QuestIds in order for this quest to be allowed to be given to a player
         - LifeCycles: {string} -- An array of strings with the IDs of our quest lifecycles. 
         - CustomData: {[string]: any} -- Contains any sort of custom data that the developer might want to add to it
+        - QuestObjectives: {QuestObjective} -- An array with all the objectives required to complete this quest
 
         // Data below will be saved
-        - QuestObjectives: {QuestObjective} -- An array with all the objectives required to complete this quest
-        - _QuestStatus: QuestStatus -- Current status of our quest
-        - _CompletedCount: number -- Amount of times that this quest has been completed
-        - _FirstCompletedTick: number? -- UTC of the first time that this quest has been repeated
-        - _LastCompletedTick: number? -- UTC of the last time that this quest has been repeated
+        - _QuestProgress: QuestProgress -- The dynamic data for our quest
