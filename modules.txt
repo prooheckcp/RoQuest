@@ -1,0 +1,3 @@
+This file contains the structure for the main Client and Server module of our quest system..
+This allows us to know how things interact with each other and what functions and Properties
+are available to the user

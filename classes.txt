@@ -1,3 +1,5 @@
+This file contains the structure for our classes and enums
+
 *Enums*
 
 - QuestStatus
@@ -59,6 +61,7 @@
         - Set: (newAmount: number) -> () -- Sets the current progress to this amount
         - IsCompleted: () -> boolean -- Returns whether this objective has been completed or not
         - _CheckProgress: () -> () -- Checks the progress of our quest objective and sets completed to true if needed
+        - _GetSavingFormat: () -> {[string]: any} -- Returns a hash map with all the data required to save in a data store
 
     - Properties
         - CurrentProgress: number -- The current progress
@@ -71,6 +74,8 @@
         This contains all the behavior of our quests. It's within this class that we should
         code how our quest behaves
 
+    TO DO
+
 - Quest
     - Description
         This is the main class of the library as it contains all the relevant data of a quest. It contains
@@ -81,8 +86,12 @@
         - CanStart: () -> boolean -- If the player can or cannot start the quest
         - GetFirstCompletedTick: () -> number? -- First time the player completed the quest. Will return nil if never
         - GetLastCompletedTick: () -> number? -- Last time the player completed the quest. Will return nil if never
+        - AddObjective: (amount: number) -> () -- Adds to the current progress by the amount
+        - RemoveObjective: (amount: number) -> () -- Removes the current progress by the amount
+        - SetObjective: (newAmount: number) -> () -- Sets the current progress to this amount
         - _GetSavingFormat: () -> {[string]: any} -- Returns a hash map with all the data required to save in a data store
-
+        - _CheckProgress: () -> () -- Whenever an objective gets updated we check whether we can change this quest progress or not
+        
     - Properties
         - Name: string -- The name of our quest
         - Description: string -- The Description of our quest
@@ -91,6 +100,7 @@
         - QuestDeliverType: QuestDeliverType -- Determines the behavior for how the quest is delivered
         - QuestRepeatableType: QuestRepeatableType -- If the quest is repeatable or not
         - RequiredQuests: {string} -- An array of strings with the required QuestIds in order for this quest to be allowed to be given to a player
+        - LifeCycles: {string} -- An array of strings with the IDs of our quest lifecycles. 
 
         // Data below will be saved
         - QuestObjectives: {QuestObjective} -- An array with all the objectives required to complete this quest
