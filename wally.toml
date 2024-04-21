@@ -1,0 +1,16 @@
+[package]
+name = "prooheckcp/RoQuest"
+description = ""
+version = "0.0.1"
+license = "MIT"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+authors = ["Prooheckcp"]
+exclude = ["**"]
+include = [
+    "default.project.json", 
+    "RoQuest", 
+    "RoQuest/*",
+    "wally.lock", 
+    "wally.toml",
+]

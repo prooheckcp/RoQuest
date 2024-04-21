@@ -75,7 +75,6 @@ This file contains the structure for our classes and enums
         - Remove: (amount: number) -> () -- Removes the current progress by the amount
         - Set: (newAmount: number) -> () -- Sets the current progress to this amount
         - IsCompleted: () -> boolean -- Returns whether this objective has been completed or not
-        - Objective: Objective -- The objective static data for this object
         - _CheckProgress: () -> () -- Checks the progress of our quest objective and sets completed to true if needed
         - _GetSavingFormat: () -> {[string]: any} -- Returns a hash map with all the data required to save in a data store
 
