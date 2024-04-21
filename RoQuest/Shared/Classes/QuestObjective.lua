@@ -1,7 +1,11 @@
 --!strict
 local QuestObjectiveProgress = require(script.Parent.Parent.Structs.QuestObjectiveProgress)
 local assertProperties = require(script.Parent.Parent.Functions.assertProperties)
+local Signal = require(script.Parent.Parent.Parent.Vendor.Signal)
+local Trove = require(script.Parent.Parent.Parent.Vendor.Trove)
 
+type Signal = Signal.Signal
+type Trove = Trove.Trove
 type QuestObjectiveProgress = QuestObjectiveProgress.QuestObjectiveProgress
 type ObjectiveInfo = {
     New: ({[string]: any}) -> ObjectiveInfo,
@@ -18,14 +22,31 @@ type ObjectiveInfo = {
     A quest objective is one of the steps that a player must complete in order to finish a quest
 
     It contains the data for the objective as well as some utility functions to allow us to 
-    manipulate the objective
+    manipulate the objective.
+
+    This class shouldn't be created directly by the developer. Instead they should use the Objective
+    info object and extend it with the NewObjective function.
+
+    ```lua
+    local appleQuest = ObjectiveInfo.new {
+        ObjectiveId = "CollectApples",
+        Name = "Collect Apples",
+        Description = "Collect %s apples",
+    }
+
+    local objective1 = appleQuest:NewObjective(5) -- Created an objective to collect 5 apples
+    local objective2 = appleQuest:NewObjective(3) -- Created an objective to collect 3 apples
+    local objective3 = appleQuest:NewObjective(7) -- Created an objective to collect 7 apples
+    ```
 ]=]
 local QuestObjective = {}
 QuestObjective.__type = "QuestObjective"
 QuestObjective.__index = QuestObjective
 QuestObjective.ObjectiveInfo = newproxy()
 QuestObjective.TargetProgress = 0 :: number
+QuestObjective.Completed = newproxy() :: Signal
 QuestObjective._QuestObjectiveProgress = newproxy() :: QuestObjectiveProgress
+QuestObjective._Trove = newproxy() :: Trove
 
 --[=[
     Constructor for QuestObjective
@@ -41,7 +62,11 @@ QuestObjective._QuestObjectiveProgress = newproxy() :: QuestObjectiveProgress
     @return QuestObjective
 ]=]
 function QuestObjective.new(properties: {[string]: any}): QuestObjective
-    return assertProperties(properties, QuestObjective)
+    local self: QuestObjective = assertProperties(properties, QuestObjective)
+    self.Completed = Signal.new()
+    self._Trove = Trove.new()
+
+    return self
 end
 
 --[=[
