@@ -41,10 +41,10 @@ ObjectiveInfo.__type = "ObjectiveInfo"
     
     When we tell the server that player did X objective this is how it will determine if it should add or not to this objective.
 
-    @prop ObjectiveId (string | {string})
+    @prop ObjectiveId string
     @within ObjectiveInfo
 ]=]
-ObjectiveInfo.ObjectiveId = "" :: string | {string}
+ObjectiveInfo.ObjectiveId = "" :: string 
 --[=[
     The name of our objective. Can be used by the player or server to display the name of the objective
     that the player must complete

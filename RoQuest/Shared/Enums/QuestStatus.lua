@@ -1,3 +1,4 @@
+--!strict
 --[=[
     @class QuestStatus
     @tag Enum

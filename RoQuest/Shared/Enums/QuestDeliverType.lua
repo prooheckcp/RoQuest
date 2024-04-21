@@ -1,3 +1,4 @@
+--!strict
 --[=[
     @class QuestDeliverType
     @tag Enum

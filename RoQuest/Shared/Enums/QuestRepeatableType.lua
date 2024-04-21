@@ -1,3 +1,4 @@
+--!strict
 --[=[
     @class QuestRepeatableType
     @tag Enum
