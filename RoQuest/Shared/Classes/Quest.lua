@@ -27,37 +27,217 @@ local NO_OBJECTIVE: string = "There is no ObjectiveId %s in the Quest %s"
 --[=[
     @class Quest
     @tag Class
+
+    This is the main class of our quest system. Quest objects define exactly the kind of quest and how
+    can a player complete it. When declaring a quest there are multiple properties that should
+    be taken into consideration. On the following example we can see how could we, per example, make
+    a quest to collect 5 apples.
+
+    ```lua
+    local appleQuest = ObjectiveInfo.new { -- We are creating an objective info object to store the data of our objective
+        ObjectiveId = "CollectApples",
+        Name = "Collect Apples",
+        Description = "Collect %s apples",
+    }
+
+    local quest = Quest.new { -- We are creating a quest object with all the relevant data
+        Name = "Collect Apples", -- The name of our quest
+        Description = "Collect %s apples", -- The description that we will display to our user
+        QuestId = "AppleCollection", -- A unique identifier to our quest
+        QuestAcceptType = QuestAcceptType.Automatic, -- If the quest automatically gets accepted or rquires manual work
+        QuestDeliverType = QuestDeliverType.Automatic, -- If the quest automatically gets delivered or requires manual work
+        QuestRepeatableType = QuestRepeatableType.NonRepeatable, -- If the quest can be repeated or not
+        QuestStart = -1, -- UTC time to define when the quest should become available (specially useful for event quests)
+        QuestEnd = -1, -- UTC time to define when the quest should no longer be available (specially useful for event quests)
+        RequiredQuests = {}, -- A list of quests that are required to be delivered before this quest can be started
+        LifeCycles = {"AppleQuest"}, -- The lifecycles that will manage this quest's behavior
+        QuestObjectives = {
+            appleQuest:NewObjective(5)
+        },
+    }
+    ```
 ]=]
 local Quest = {}
 Quest.__index = Quest
 Quest.__type = "Quest"
+--[=[
+    Called whenever one of the quests objective changes the value
+
+    ```lua
+    quest.OnQuestObjectiveChanged:Connect(function(objectiveId: string, newAmount: number)
+        print("Objective " .. objectiveId .. " has changed to " .. newAmount)
+    end)
+    ```
+
+    @prop OnQuestObjectiveChanged Signal
+    @within Quest
+]=]
 Quest.OnQuestObjectiveChanged = newproxy() :: Signal
+--[=[
+    Called when the quest gets completed
+
+    ```lua
+    quest.OnQuestCompleted:Connect(function()
+        print("The quest got completed!")
+    end)
+    ```
+
+    @prop OnQuestCompleted Signal
+    @within Quest
+]=]
 Quest.OnQuestCompleted = newproxy() :: Signal
+--[=[
+    Called when the quest gets delivered
+
+    ```lua
+    quest.OnQuestDelivered:Connect(function()
+        print("The quest got delivered!")
+    end)
+    ```
+
+    @prop OnQuestDelivered Signal
+    @within Quest
+]=]
 Quest.OnQuestDelivered = newproxy() :: Signal
+--[=[
+    Called when the quest gets cancelled
+
+    ```lua
+    quest.OnQuestCanceled:Connect()
+        print("The quest got cancelled!")
+    end)
+    ```
+
+    @prop OnQuestCanceled Signal
+    @within Quest
+]=]
 Quest.OnQuestCanceled = newproxy() :: Signal
+--[=[
+    The name of the quest
+
+    @prop Name string
+    @within Quest
+]=]
 Quest.Name = "" :: string
+--[=[
+    The description of the quest
+    
+    @prop Description string
+    @within Quest
+]=]
 Quest.Description = "" :: string
+--[=[
+    The quest ID. This must be a unique identifier for the quest
+    
+    @prop Name string
+    @within Quest
+]=]
 Quest.QuestId = "" :: string
+--[=[
+    The type of the quest accepting system. This can be either automatic or manual
+    
+    @prop QuestAcceptType QuestAcceptType
+    @within Quest
+]=]
 Quest.QuestAcceptType = QuestAcceptType.Automatic :: QuestAcceptType
+--[=[
+    The type of the quest delivering system. This can be either automatic or manual
+    
+    @prop QuestDeliverType QuestDeliverType
+    @within Quest
+]=]
 Quest.QuestDeliverType = QuestDeliverType.Automatic :: QuestDeliverType
+--[=[
+    How many times can this quest be repeated
+    
+    @prop QuestRepeatableType QuestRepeatableType
+    @within Quest
+]=]
 Quest.QuestRepeatableType = QuestRepeatableType.NonRepeatable :: QuestRepeatableType
-Quest.QuestStart = 0 :: number
-Quest.QuestEnd = 0 :: number
+--[=[
+    UTC time to define when the quest should become available (specially useful for event quests)
+
+    @prop QuestStart number
+    @within Quest
+]=]
+Quest.QuestStart = -1 :: number
+--[=[
+    UTC time to define when the quest should no longer be available (specially useful for event quests)
+    
+    @prop QuestEnd number
+    @within Quest
+]=]
+Quest.QuestEnd = -1 :: number
+--[=[
+    This is an array with all the required quest IDs in order for this quest to become available
+
+    @prop RequiredQuests {string}
+    @within Quest
+]=]
 Quest.RequiredQuests = {} :: {string}
+--[=[
+    This is an array with all the LifeCycles names that will manage this quest's behavior
+
+    @prop LifeCycles {string}
+    @within Quest
+]=]
 Quest.LifeCycles = {} :: {string}
+--[=[
+    An array with all the objectives required to complete this quest
+
+    @prop QuestObjectives {QuestObjective}
+    @within Quest
+]=]
 Quest.QuestObjectives = {} :: {QuestObjective}
+--[=[
+    A hash map that stores and tracks all the quest objectives that are currently active in the quest
+
+    @private
+    @prop _QuestObjectives {[string]: QuestObjective}
+    @within Quest
+]=]
 Quest._QuestObjectives = {} :: {[string]: QuestObjective}
+--[=[
+    Cached value of our quest progress
+
+    @private
+    @prop _QuestProgress QuestProgress
+    @within Quest
+]=]
 Quest._QuestProgress = newproxy() :: QuestProgress
+--[=[
+    Our trove used to cleanup connections
+
+    @private
+    @prop _Trove Trove
+    @within Quest
+]=]
 Quest._Trove = newproxy() :: Trove
 
 --[=[
     Constructor for Quest
 
     ```lua
-    local quest = Quest.new {
+    local appleQuest = ObjectiveInfo.new {
         ObjectiveId = "CollectApples",
         Name = "Collect Apples",
         Description = "Collect %s apples",
+    }
+
+    local quest = Quest.new {
+        Name = "Collect Apples",
+        Description = "Collect %s apples",
+        QuestId = "AppleCollection",
+        QuestAcceptType = QuestAcceptType.Automatic,
+        QuestDeliverType = QuestDeliverType.Automatic,
+        QuestRepeatableType = QuestRepeatableType.NonRepeatable,
+        QuestStart = 0,
+        QuestEnd = 0,
+        RequiredQuests = {},
+        LifeCycles = {"AppleQuest"},
+        QuestObjectives = {
+            appleQuest:NewObjective(5)
+        },
     }
     ```
 
@@ -89,30 +269,75 @@ function Quest.new(properties: {[string]: any}): Quest
     return self
 end
 
+--[=[
+    Gets the current status of the quest
+
+    @return QuestStatus
+]=]
 function Quest:GetQuestStatus(): QuestStatus
     return self._QuestProgress.QuestStatus
 end
 
+--[=[
+    Gets the amount of times that this quest has been completed.
+    Will return 0 if it has never been completed
+
+    @return number
+]=]
 function Quest:GetCompleteCount(): number
     return self._QuestProgress.CompletedCount
 end
 
+--[=[
+    Gets the first UTC time that this quest was completed
+
+    @return number
+]=]
 function Quest:GetFirstCompletedTick(): number
     return self._QuestProgress.FirstCompletedTick
 end
 
+--[=[
+    Gets the last UTC time at which this quest was completed
+
+    @return number
+]=]
 function Quest:GetLastCompletedTick(): number
     return self._QuestProgress.LastCompletedTick
 end
 
+--[=[
+    Adds to the objective of the quest by the amount specified
+
+    @param objectiveId string
+    @param amount number
+
+    @return ()
+]=]
 function Quest:AddObjective(objectiveId: string, amount: number): ()
     return self:SetObjective(objectiveId, self:GetObjective(objectiveId) + amount)
 end
 
+--[=[
+    Removes to the objective by the amount specfiied
+    
+    @param objectiveId string
+    @param amount number
+
+    @return ()
+]=]
 function Quest:RemoveObjective(objectiveId: string, amount: number): ()
     return self:SetObjective(objectiveId, self:GetObjective(objectiveId) - amount)
 end
 
+--[=[
+    Sets the quest objective to the given new value
+
+    @param objectiveId string
+    @param newAmount number
+
+    @return ()
+]=]
 function Quest:SetObjective(objectiveId: string, newAmount: number): ()
     local questObjective: QuestObjective? = self._QuestObjectives[objectiveId]
 
@@ -125,6 +350,13 @@ function Quest:SetObjective(objectiveId: string, newAmount: number): ()
     end
 end
 
+--[=[
+    Gets an objective value by its id
+
+    @param objectiveId number
+
+    @return number
+]=]
 function Quest:GetObjective(objectiveId: number): number
     local questObjective: QuestObjectiveProgress? = self:_GetObjectiveProgress(objectiveId)
 
@@ -135,6 +367,11 @@ function Quest:GetObjective(objectiveId: number): number
     return questObjective.CurrentProgress or 0
 end
 
+--[=[
+    Sets the quest to complete if possible
+
+    @return ()
+]=]
 function Quest:Complete(): ()
     if self:GetQuestStatus() ~= QuestStatus.InProgress then return end
 
@@ -146,6 +383,11 @@ function Quest:Complete(): ()
     end
 end
 
+--[=[
+    Sets the quest to delivered if possible
+
+    @return ()
+]=]
 function Quest:Deliver(): ()
     if self:GetQuestStatus() ~= QuestStatus.Completed then return end
 
@@ -153,6 +395,14 @@ function Quest:Deliver(): ()
     self.OnQuestDelivered:Fire()
 end
 
+--[=[
+    Overrides and updates the quest progress. Should only be used when loading in
+    player data
+
+    @param newQuestProgress QuestProgress
+
+    @return ()
+]=]
 function Quest:SetQuestProgress(newQuestProgress: QuestProgress): ()
     for _, questObjective: QuestObjective in self._QuestObjectives do
         questObjective:Destroy()
@@ -187,10 +437,23 @@ function Quest:SetQuestProgress(newQuestProgress: QuestProgress): ()
     self._QuestProgress = newQuestProgress
 end
 
-function Quest:Destroy()
+--[=[
+    Cleans up our class
+
+    @return ()
+]=]
+function Quest:Destroy(): ()
     self._Trove:Destroy()
 end
 
+--[=[
+    Wrapper to get the objective progress quickly
+
+    @private
+    @param objectiveId string
+
+    @return QuestObjectiveProgress?
+]=]
 function Quest:_GetObjectiveProgress(objectiveId: string): QuestObjectiveProgress?
     local questObjective: QuestObjectiveProgress? = self._QuestProgress.QuestObjectiveProgresses[objectiveId]
 
@@ -201,10 +464,24 @@ function Quest:_GetObjectiveProgress(objectiveId: string): QuestObjectiveProgres
     return questObjective
 end
 
+--[=[
+    Wrapper to get the quest progress
+
+    @private
+
+    @return QuestProgress
+]=]
 function Quest:_GetQuestProgress(): QuestProgress
     return self._QuestProgress
 end
 
+--[=[
+    Checks if the quest is completed
+
+    @private
+
+    @return ()
+]=]
 function Quest:_CheckProgress(): ()
     if self:GetQuestStatus() ~= QuestStatus.InProgress then return end
     
