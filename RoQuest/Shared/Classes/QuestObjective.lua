@@ -42,10 +42,58 @@ type ObjectiveInfo = {
 local QuestObjective = {}
 QuestObjective.__type = "QuestObjective"
 QuestObjective.__index = QuestObjective
+--[=[
+    A reference to the ObjectiveInfo object that this QuestObjective is based on
+
+    @prop ObjectiveInfo ObjectiveInfo
+    @within QuestObjective
+]=]
 QuestObjective.ObjectiveInfo = newproxy()
+--[=[
+    The target progress required for the player complete this objective
+
+    @prop TargetProgress number
+    @within QuestObjective
+]=]
 QuestObjective.TargetProgress = 0 :: number
+--[=[
+    A Signal that fires whenever the quest objective is marked as completed
+
+    ```lua
+    local flowerQuest = ObjectiveInfo.new {
+        ObjectiveId = "CollectFlowers",
+        Name = "Collect Flowers",
+        Description = "Collect %s flowers",
+    }
+
+    local appleObjective1 = appleQuest:NewObjective(5) -- Created an objective to collect 5 apples
+
+    appleObjective1.Completed:Connect(function()
+        print("Objective 1 has been completed!")
+    end)
+    ```
+
+    @prop Completed Signal
+    @within QuestObjective
+]=]
 QuestObjective.Completed = newproxy() :: Signal
+--[=[
+    A reference to our QuestObjectiveProgress to track the dynamic data of our objective
+
+    @private
+
+    @prop _QuestObjectiveProgress QuestObjectiveProgress
+    @within QuestObjective
+]=]
 QuestObjective._QuestObjectiveProgress = newproxy() :: QuestObjectiveProgress
+--[=[
+    The Trove object from our QuestObjective that allows us to clearup the object
+
+    @private
+
+    @prop _Trove Trove
+    @within QuestObjective
+]=]
 QuestObjective._Trove = newproxy() :: Trove
 
 --[=[
@@ -69,7 +117,7 @@ function QuestObjective.new(properties: {[string]: any}): QuestObjective
         CurrentProgress = 0,
         Completed = false,
     }
-    
+
     return self
 end
 
@@ -147,6 +195,11 @@ function QuestObjective:Set(newAmount: number): boolean
 
     self._QuestObjectiveProgress.CurrentProgress = newAmount
 
+    if newAmount > self.TargetProgress then
+        self._QuestObjectiveProgress.Completed = true
+        self.Completed:Fire()
+    end
+
     return true
 end
 
@@ -163,6 +216,19 @@ end
 ]=]
 function QuestObjective:IsCompleted(): boolean
     return self._QuestObjectiveProgress.Completed
+end
+
+--[=[
+    Destroys the QuestObjective and clears up the object
+
+    ```lua
+    QuestObjective:Destroy()
+    ```
+
+    @return ()
+]=]
+function QuestObjective:Destroy(): ()
+    self._Trove:Destroy()
 end
 
 export type QuestObjective = typeof(QuestObjective)
