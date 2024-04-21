@@ -122,6 +122,7 @@ setmetatable(Connection, {
 
 --[=[
 	@class Signal
+	@tag Vendor
 
 	A Signal is a data structure that allows events to be dispatched
 	and observed.

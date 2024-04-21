@@ -6,6 +6,7 @@ export type QuestObjective = typeof(QuestObjective)
 
 --[=[
     @class ObjectiveInfo
+    @tag Class
 
     The ObjectiveInfo contains the static data for our quest objectives. This is where the developer
     should initiate the data for the objective as long as create the QuestObjective objects.

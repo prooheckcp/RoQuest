@@ -161,6 +161,8 @@ end
 
 --[=[
 	@class Trove
+	@tag Vendor
+	
 	A Trove is helpful for tracking any sort of object during
 	runtime that needs to get cleaned up at some point.
 ]=]

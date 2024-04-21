@@ -18,6 +18,7 @@ type ObjectiveInfo = {
 
 --[=[
     @class QuestObjective
+    @tag Class
 
     A quest objective is one of the steps that a player must complete in order to finish a quest
 
