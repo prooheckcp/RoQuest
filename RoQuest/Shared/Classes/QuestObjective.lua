@@ -65,7 +65,11 @@ function QuestObjective.new(properties: {[string]: any}): QuestObjective
     local self: QuestObjective = assertProperties(properties, QuestObjective)
     self.Completed = Signal.new()
     self._Trove = Trove.new()
-
+    self._QuestObjectiveProgress = QuestObjectiveProgress {
+        CurrentProgress = 0,
+        Completed = false,
+    }
+    
     return self
 end
 
