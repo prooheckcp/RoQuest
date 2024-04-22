@@ -254,7 +254,7 @@ function Quest.new(properties: {[string]: any}): Quest
     self.RequiredQuests = {}
     self.LifeCycles = {}
     self.QuestObjectives = {}
-    self:SetQuestProgress(QuestProgress {
+    self:_SetQuestProgress(QuestProgress {
         QuestObjectiveProgresses = {},
         QuestStatus = QuestStatus.NotStarted,
         CompletedCount = 0,
@@ -396,14 +396,24 @@ function Quest:Deliver(): ()
 end
 
 --[=[
+    Cleans up our class
+
+    @return ()
+]=]
+function Quest:Destroy(): ()
+    self._Trove:Destroy()
+end
+
+--[=[
     Overrides and updates the quest progress. Should only be used when loading in
     player data
 
+    @private
     @param newQuestProgress QuestProgress
 
     @return ()
 ]=]
-function Quest:SetQuestProgress(newQuestProgress: QuestProgress): ()
+function Quest:_SetQuestProgress(newQuestProgress: QuestProgress): ()
     for _, questObjective: QuestObjective in self._QuestObjectives do
         questObjective:Destroy()
     end
@@ -435,15 +445,6 @@ function Quest:SetQuestProgress(newQuestProgress: QuestProgress): ()
     end
 
     self._QuestProgress = newQuestProgress
-end
-
---[=[
-    Cleans up our class
-
-    @return ()
-]=]
-function Quest:Destroy(): ()
-    self._Trove:Destroy()
 end
 
 --[=[
