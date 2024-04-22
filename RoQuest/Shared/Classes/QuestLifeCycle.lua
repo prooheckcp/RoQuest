@@ -84,6 +84,8 @@ type Quest = { -- Fake quest type for autocomplete candy
 ]=]
 local QuestLifeCycle = {}
 QuestLifeCycle.__index = QuestLifeCycle
+QuestLifeCycle.__type = "QuestLifeCycle"
+
 --[=[
 	The name of the lifecycle. This needs to be unique for each lifecycle
 
