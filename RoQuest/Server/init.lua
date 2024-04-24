@@ -1,5 +1,4 @@
 --!strict
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local Signal = require(script.Parent.Vendor.Signal)
@@ -51,11 +50,13 @@ RoQuest.QuestStatus = QuestStatus
 RoQuest._Initiated = false :: boolean
 RoQuest._StaticQuests = {} :: {[string]: Quest}
 RoQuest._StaticQuestLifeCycles = {} :: {[string]: QuestLifeCycle}
-RoQuest._StaticAvailableQuests = {} :: {[string]: Quest}
+RoQuest._StaticAvailableQuests = {} :: {[string]: true}
+RoQuest._StaticObjectiveReference = {} :: {[string]: {[string]: true}}
 RoQuest._Quests = {} :: {[Player]: {[string]: Quest}}
 RoQuest._AvailableQuests = {} :: {[Player]: {[string]: true}}
 RoQuest._UnavailableQuests = {} :: {[Player]: {[string]: true}}
 RoQuest._InProgressQuests = {} :: {[Player]: {[string]: true}}
+RoQuest._CompletedQuests = {} :: {[Player]: {[string]: true}}
 RoQuest._DeliveredQuests = {} :: {[Player]: {[string]: true}}
 
 --[=[
@@ -153,7 +154,14 @@ end
 	
 ]=]
 function RoQuest:SetPlayerData(player: Player, data: PlayerQuestData): ()
-	
+	--[[
+	RoQuest._InProgressQuests = {} :: {[Player]: {[string]: true}}
+	RoQuest._CompletedQuests = {} :: {[Player]: {[string]: true}}
+	RoQuest._DeliveredQuests = {} :: {[Player]: {[string]: true}}
+
+	self:_LoadPlayerAvailableQuests(player)		
+	]]
+
 end
 
 --[=[
@@ -171,16 +179,25 @@ function RoQuest:AddObjective(player: Player, objectiveId: string, amount: numbe
 		return
 	end
 	
-	for _, quest: Quest? in self._InProgressQuests[player] do
-		
-	end
+	--[[
+	for questId: string in self._InProgressQuests[player] do
+		local quest: Quest? = self._Quests[player][questId]
+
+		if not quest then
+			continue
+		end
+
+		quest:AddObjective(objectiveId, amount)
+	end		
+	]]
+
 end
 
 --[=[
 	
 ]=]
 function RoQuest:SetObjective(player: Player, objectiveId: string, amount: number): ()
-	
+
 end
 
 --[=[
@@ -215,7 +232,19 @@ end
 	
 ]=]
 function RoQuest:CanGiveQuest(player: Player, questId: string): boolean
-	
+	local quest: Quest? = self:GetStaticQuest(questId)
+
+	if not quest then
+		return false
+	end
+
+	for _, requiredQuestId: string in quest.RequiredQuests do
+		if not self._DeliveredQuests[player][requiredQuestId] then
+			return false
+		end
+	end
+
+	return not self._InProgressQuests[player][questId] or not not self._CompletedQuests[player][questId] or not not self._DeliveredQuests[player][questId]
 end
 
 --[=[
@@ -277,8 +306,42 @@ end
 	@return ()
 ]=]
 function RoQuest:_LoadPlayerAvailableQuests(player: Player): ()
-	for _ in self._AvailableQuests do
-		
+	for questId: string in self._StaticAvailableQuests do
+		self:_NewPlayerAvailableQuest(player, questId)
+	end
+
+	for questId: string in self._InProgressQuests[player] do
+		local quest: Quest = self:GetStaticQuest(questId)
+
+	
+	end
+end
+
+--[=[
+	Checks if the player can accept the quest and if so, gives it to the player
+
+	@private
+	@param player Player
+	@param questId string
+
+	@return ()
+]=]
+function RoQuest:_NewPlayerAvailableQuest(player: Player, questId: string)
+	if not self:CanGiveQuest(player, questId) then
+		return
+	end
+
+	local quest: Quest? = self:GetStaticQuest(questId)
+
+	if not quest then
+		return
+	end
+
+	if quest.QuestAcceptType == QuestAcceptType.Automatic then
+		self:GiveQuest(player, questId)
+	else
+		self._AvailableQuests[player][questId] = true
+		self.OnQuestAvailable:Fire(player, questId)
 	end
 end
 
@@ -357,6 +420,7 @@ function RoQuest:_PlayerAdded(player: Player): ()
 	self._UnavailableQuests[player] = {}
 	self._InProgressQuests[player] = {}
 	self._DeliveredQuests[player] = {}
+	self._CompletedQuests[player] = {}
 
 	self:_LoadPlayerAvailableQuests(player)
 end
@@ -375,6 +439,7 @@ function RoQuest:_PlayerRemoving(player: Player): ()
 	self._UnavailableQuests[player] = nil
 	self._InProgressQuests[player] = nil
 	self._DeliveredQuests[player] = nil
+	self._CompletedQuests[player] = nil
 end
 
 return RoQuest
