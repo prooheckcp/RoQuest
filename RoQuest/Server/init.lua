@@ -53,6 +53,7 @@ RoQuest._StaticQuestLifeCycles = {} :: {[string]: QuestLifeCycle}
 RoQuest._StaticAvailableQuests = {} :: {[string]: true}
 RoQuest._StaticObjectiveReference = {} :: {[string]: {[string]: true}}
 RoQuest._Quests = {} :: {[Player]: {[string]: Quest}}
+RoQuest._PlayerQuestData = {} :: {[Player]: PlayerQuestData}
 RoQuest._AvailableQuests = {} :: {[Player]: {[string]: true}}
 RoQuest._UnavailableQuests = {} :: {[Player]: {[string]: true}}
 RoQuest._InProgressQuests = {} :: {[Player]: {[string]: true}}
@@ -161,14 +162,14 @@ function RoQuest:SetPlayerData(player: Player, data: PlayerQuestData): ()
 
 	self:_LoadPlayerAvailableQuests(player)		
 	]]
-
+	self._PlayerQuestData[player] = data
 end
 
 --[=[
 	
 ]=]
 function RoQuest:GetPlayerData(player: Player): PlayerQuestData
-	
+	return self._PlayerQuestData[player] or PlayerQuestData {}
 end
 
 --[=[
@@ -369,7 +370,15 @@ function RoQuest:_LoadQuests(quests: {Quest}): ()
 		local questEnd: number = quest.QuestEnd
 		local currentTime: number = os.time()
 
-		if 
+		for objectiveId: string in quest._QuestObjectives do
+			if not self._StaticObjectiveReference[objectiveId] then
+				self._StaticObjectiveReference[objectiveId] = {}
+			end
+
+			self._StaticObjectiveReference[objectiveId][quest.QuestId] = true
+		end
+
+		if
 			questStart <= currentTime and questEnd >= currentTime or
 			questStart == questEnd
 		then
@@ -421,6 +430,7 @@ function RoQuest:_PlayerAdded(player: Player): ()
 	self._InProgressQuests[player] = {}
 	self._DeliveredQuests[player] = {}
 	self._CompletedQuests[player] = {}
+	self._PlayerQuestData[player] = PlayerQuestData {}
 
 	self:_LoadPlayerAvailableQuests(player)
 end
@@ -440,6 +450,7 @@ function RoQuest:_PlayerRemoving(player: Player): ()
 	self._InProgressQuests[player] = nil
 	self._DeliveredQuests[player] = nil
 	self._CompletedQuests[player] = nil
+	self._PlayerQuestData[player] = nil
 end
 
 return RoQuest
