@@ -36,8 +36,8 @@ local LOAD_DIRECTORY_TYPES: {[string]: true} = {
 	@class RoQuest
 ]=]
 local RoQuest = {}
-RoQuest.OnQuestObjectiveChanged = Signal.new()
 RoQuest.PlayerFinishedLoading = Signal.new()
+RoQuest.OnQuestObjectiveChanged = Signal.new()
 RoQuest.OnQuestStarted = Signal.new()
 RoQuest.OnQuestCompleted = Signal.new()
 RoQuest.OnQuestDelivered = Signal.new()
@@ -85,6 +85,47 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 	if lifeCycles then
 		self:_LoadLifeCycles(lifeCycles)
 	end
+
+	local net = Red.Server("QuestNamespace", {
+		"OnQuestObjectiveChanged",
+		"OnQuestStarted",
+		"OnQuestCompleted",
+		"OnQuestDelivered",
+		"OnQuestCancelled",
+		"OnQuestAvailable",
+	})
+
+	self.OnQuestObjectiveChanged:Connect(function(player: Player)
+		net:Fire(player, "OnQuestObjectiveChanged")
+	end)
+
+	self.OnQuestStarted:Connect(function(player: Player)
+		net:Fire(player, "OnQuestStarted")
+	end)
+
+	self.OnQuestCompleted:Connect(function(player: Player)
+		net:Fire(player, "OnQuestCompleted")
+	end)
+
+	self.OnQuestDelivered:Connect(function(player: Player)
+		net:Fire(player, "OnQuestDelivered")
+	end)
+	
+	self.OnQuestCancelled:Connect(function(player: Player)
+		net:Fire(player, "OnQuestCancelled")
+	end)
+
+	self.OnQuestAvailable:Connect(function(player: Player)
+		net:Fire(player, "OnQuestAvailable")
+	end)
+
+	net:On("GetPlayerData", function(player: Player)
+		while not self._PlayerQuestData[player] and player.Parent == Players do -- Wait for player to load
+			task.wait()
+		end
+
+		return self:GetPlayerData(player)	
+	end)
 
 	Players.PlayerAdded:Connect(function(player: Player)
 		self:_PlayerAdded(player)
