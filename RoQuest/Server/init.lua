@@ -399,7 +399,7 @@ function RoQuest:_GiveQuest(player: Player, questId: string, questProgress: Ques
 
 	questClone._QuestProgress = questProgress or QuestProgress {
 		QuestObjectiveProgresses = {},
-		QuestStatus = QuestStatus.NotStarted,
+		QuestStatus = QuestStatus.InProgress,
 		CompletedCount = 0,
 		FirstCompletedTick = -1,
 		LastCompletedTick = -1,

@@ -1,10 +1,7 @@
-local HttpService = game:GetService("HttpService")
-
 local function createStruct(data)
     return setmetatable({}, {
         __call = function(_, properties)
             local dataTable = setmetatable({}, data)
-            dataTable.Id = HttpService:GenerateGUID(false)
             
             for index: string, value: any in pairs(data) do
                 if properties[index] == nil then
