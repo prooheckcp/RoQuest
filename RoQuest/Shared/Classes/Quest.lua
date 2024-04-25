@@ -370,10 +370,10 @@ end
 --[=[
     Sets the quest to complete if possible
 
-    @return ()
+    @return boolean
 ]=]
-function Quest:Complete(): ()
-    if self:GetQuestStatus() ~= QuestStatus.InProgress then return end
+function Quest:Complete(): boolean
+    if self:GetQuestStatus() ~= QuestStatus.InProgress then return false end
 
     self:_GetQuestProgress().QuestStatus = QuestStatus.Completed
     self.OnQuestCompleted:Fire()
@@ -381,18 +381,21 @@ function Quest:Complete(): ()
     if self.QuestDeliverType == QuestDeliverType.Automatic then
         self:Deliver()
     end
+
+    return true
 end
 
 --[=[
     Sets the quest to delivered if possible
 
-    @return ()
+    @return boolean
 ]=]
-function Quest:Deliver(): ()
-    if self:GetQuestStatus() ~= QuestStatus.Completed then return end
+function Quest:Deliver(): boolean
+    if self:GetQuestStatus() ~= QuestStatus.Completed then return false end
 
     self:_GetQuestProgress().QuestStatus = QuestStatus.Delivered
     self.OnQuestDelivered:Fire()
+    return true
 end
 
 --[=[
@@ -497,4 +500,8 @@ end
 
 export type Quest = typeof(Quest)
 
-return Quest
+return setmetatable(Quest, {
+    __call = function(_, properties)
+        return Quest.new(properties)
+    end
+})

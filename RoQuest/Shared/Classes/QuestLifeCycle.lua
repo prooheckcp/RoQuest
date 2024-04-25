@@ -221,4 +221,8 @@ end
 
 export type QuestLifeCycle = typeof(QuestLifeCycle)
 
-return QuestLifeCycle
+return setmetatable(QuestLifeCycle, {
+    __call = function(_, properties)
+        return QuestLifeCycle.new(properties)
+    end
+})

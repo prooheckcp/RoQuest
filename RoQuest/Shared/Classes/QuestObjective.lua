@@ -49,7 +49,7 @@ QuestObjective.__index = QuestObjective
     @prop ObjectiveInfo ObjectiveInfo
     @within QuestObjective
 ]=]
-QuestObjective.ObjectiveInfo = newproxy()
+QuestObjective.ObjectiveInfo = {}
 --[=[
     The target progress required for the player complete this objective
 
@@ -234,4 +234,8 @@ end
 
 export type QuestObjective = typeof(QuestObjective)
 
-return QuestObjective
+return setmetatable(QuestObjective, {
+    __call = function(_, properties)
+        return QuestObjective.new(properties)
+    end
+})

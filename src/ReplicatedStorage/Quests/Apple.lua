@@ -5,7 +5,7 @@ local RoQuest = require(ReplicatedStorage.RoQuest).Server
 local ObjectiveInfo = RoQuest.ObjectiveInfo
 local Quest = RoQuest.Quest
 
-local appleObjective = ObjectiveInfo {
+local appleObjective = ObjectiveInfo.new {
     Description = "%s/%s apples collected",
     Name = "Collect Apples",
     ObjectiveId = "Apple",

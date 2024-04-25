@@ -239,7 +239,17 @@ end
 	
 ]=]
 function RoQuest:GiveQuest(player: Player, questId: string): boolean
-	
+	if not self:CanGiveQuest(player, questId) then
+		return false		
+	end
+
+	local questClone: Quest = table.clone(self:GetStaticQuest(questId))
+
+	self._Quests[player][questId] = questClone
+	self._InProgressQuests[player][questId] = true
+	self.OnQuestStarted:Fire(player, questId)
+
+	return true
 end
 
 --[=[
@@ -249,17 +259,34 @@ function RoQuest:CompleteQuest(player: Player, questId: string): boolean
 	local quest: Quest? = self:GetQuest(player, questId)
 
 	if not quest then
-		return
+		return false
 	end
 
-	quest:Complete()
+	return quest:Complete()
+end
+
+function RoQuest:DeliverQuest(player: Player, questId: string)
+	local quest: Quest? = self:GetQuest(player, questId)
+
+	if not quest then
+		return false
+	end
+
+	return quest:Deliver()
 end
 
 --[=[
 	
 ]=]
 function RoQuest:CancelQuest(player: Player, questId: string): boolean
-	
+	local quest: Quest? = self:GetQuest(player, questId)
+
+	if not quest or quest:GetQuestStatus() == QuestStatus.Delivered then
+		return false
+	end
+
+	-- do stuff
+	--self._Quests[player][questId] = nil
 end
 
 --[=[
@@ -320,11 +347,14 @@ function RoQuest:_QuestBecameAvailable(questId: string): ()
 	end
 
 	self._StaticAvailableQuests[questId] = true -- Should give to players if possible
+	-- still to finish
 end
 
 function RoQuest:_QuestBecameUnavailable(questId: string)
-	for player: Player in self._Quests[player] do
-		
+	for player: Player, questData: {[string]: Quest} in self._Quests do
+		if questData[questId] and questData[questId]:GetQuestStatus() ~= QuestStatus.Delivered then
+			self:CancelQuest(player, questId)
+		end
 	end
 end
 
@@ -395,11 +425,11 @@ function RoQuest:_LoadQuests(quests: {Quest}): ()
 			continue
 		end
 
-		if self._Quests[quest.QuestId] then
+		if self._StaticQuests[quest.QuestId] then
 			error(string.format(WarningMessages.DuplicateQuestId, quest.QuestId))
 		end
 
-		self._Quests[quest.QuestId] = quest
+		self._StaticQuests[quest.QuestId] = quest
 
 		local questStart: number = quest.QuestStart
 		local questEnd: number = quest.QuestEnd

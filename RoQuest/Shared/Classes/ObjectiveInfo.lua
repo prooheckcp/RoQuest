@@ -107,4 +107,8 @@ end
 
 export type ObjectiveInfo = typeof(ObjectiveInfo)
 
-return ObjectiveInfo
+return setmetatable(ObjectiveInfo, {
+    __call = function(_, properties)
+        return ObjectiveInfo.new(properties)
+    end
+})

@@ -1,10 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RoQuest = require(ReplicatedStorage.RoQuest).Server
-local QuestObjective = require(ReplicatedStorage.RoQuest.Shared.Classes.QuestObjective)
 
-QuestObjective.new {
-    Name = "Test",
-    Description = "Test",
-    Test = "uwu",
-}
+RoQuest:Init(RoQuest:LoadDirectory(ReplicatedStorage.Quests))
+
+RoQuest.OnQuestStarted:Connect(function(player: Player, quest)
+    print(player.Name, "started quest: ", quest)
+end)
