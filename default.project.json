@@ -8,7 +8,7 @@
     },
 
     "ReplicatedStorage": {
-      "$path": "ReplicatedStorage",
+      "$path": "src/ReplicatedStorage",
       "RoQuest":{
         "$path": "RoQuest"
       }

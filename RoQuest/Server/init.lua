@@ -180,32 +180,59 @@ function RoQuest:AddObjective(player: Player, objectiveId: string, amount: numbe
 		return
 	end
 	
-	--[[
-	for questId: string in self._InProgressQuests[player] do
-		local quest: Quest? = self._Quests[player][questId]
+	for questId: string in self._StaticObjectiveReference[objectiveId] do
+		if self._InProgressQuests[player][questId] then
+			local quest: Quest? = self:GetQuest(player, questId)
 
-		if not quest then
-			continue
+			if not quest then
+				continue
+			end
+
+			quest:AddObjective(objectiveId, amount)
 		end
-
-		quest:AddObjective(objectiveId, amount)
-	end		
-	]]
-
+	end
 end
 
 --[=[
 	
 ]=]
 function RoQuest:SetObjective(player: Player, objectiveId: string, amount: number): ()
+	if not self._InProgressQuests[player] then
+		return
+	end
+	
+	for questId: string in self._StaticObjectiveReference[objectiveId] do
+		if self._InProgressQuests[player][questId] then
+			local quest: Quest? = self:GetQuest(player, questId)
 
+			if not quest then
+				continue
+			end
+
+			quest:SetObjective(objectiveId, amount)
+		end
+	end
 end
 
 --[=[
 	
 ]=]
 function RoQuest:RemoveObjective(player: Player, objectiveId: string, amount: number): ()
+	if not self._InProgressQuests[player] then
+		return
+	end
 	
+	for questId: string in self._StaticObjectiveReference[objectiveId] do
+		if self._InProgressQuests[player][questId] then
+			local quest: Quest? = self:GetQuest(player, questId)
+
+			if not quest then
+				continue
+			end
+
+			quest:RemoveObjective(objectiveId, amount)
+		end
+	end
 end
 
 --[=[
@@ -219,7 +246,13 @@ end
 	
 ]=]
 function RoQuest:CompleteQuest(player: Player, questId: string): boolean
-	
+	local quest: Quest? = self:GetQuest(player, questId)
+
+	if not quest then
+		return
+	end
+
+	quest:Complete()
 end
 
 --[=[
@@ -290,7 +323,9 @@ function RoQuest:_QuestBecameAvailable(questId: string): ()
 end
 
 function RoQuest:_QuestBecameUnavailable(questId: string)
-	-- Should cancel quest from players if necessary
+	for player: Player in self._Quests[player] do
+		
+	end
 end
 
 -- Check if any of the quests can become available
@@ -312,7 +347,7 @@ function RoQuest:_LoadPlayerAvailableQuests(player: Player): ()
 	end
 
 	for questId: string in self._InProgressQuests[player] do
-		local quest: Quest = self:GetStaticQuest(questId)
+		--local quest: Quest = self:GetStaticQuest(questId)
 
 	
 	end
