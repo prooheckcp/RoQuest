@@ -57,8 +57,9 @@ function RoQuest:Init(lifeCycles: {QuestLifeCycle}?): ()
 		
 	end)
 
+	-- Need to change the way quests are loaded to allow for dynamic loading
 	net:Call("GetPlayerData"):Then(function(playerData: PlayerQuestData)
-		print("Loaded player data: ", playerData) -- do stuff with the data
+		--print("Loaded player data: ", playerData) -- do stuff with the data
 	end)
 end
 
@@ -87,6 +88,5 @@ function RoQuest:_LoadLifeCycles(lifecycles: {QuestLifeCycle}): ()
 		self._StaticQuestLifeCycles[questLifeCycle.Name] = questLifeCycle
 	end
 end
-
 
 return RoQuest

@@ -8,13 +8,17 @@ local warn = require(script.Parent.Shared.Functions.warn)
 local Quest = require(script.Parent.Shared.Classes.Quest)
 local QuestLifeCycle = require(script.Parent.Shared.Classes.QuestLifeCycle)
 local ObjectiveInfo = require(script.Parent.Shared.Classes.ObjectiveInfo)
+local QuestObjective = require(script.Parent.Shared.Classes.QuestObjective)
 local QuestProgress = require(script.Parent.Shared.Structs.QuestProgress)
+local QuestObjectiveProgress = require(script.Parent.Shared.Structs.QuestObjectiveProgress)
 local QuestStatus = require(script.Parent.Shared.Enums.QuestStatus)
 local QuestRepeatableType = require(script.Parent.Shared.Enums.QuestRepeatableType)
 local QuestDeliverType = require(script.Parent.Shared.Enums.QuestDeliverType)
 local QuestAcceptType = require(script.Parent.Shared.Enums.QuestAcceptType)
 local PlayerQuestData = require(script.Parent.Shared.Structs.PlayerQuestData)
 
+type QuestObjective = QuestObjective.QuestObjective
+type QuestObjectiveProgress = QuestObjectiveProgress.QuestObjectiveProgress
 type ObjectiveInfo = ObjectiveInfo.ObjectiveInfo
 type QuestAcceptType = QuestAcceptType.QuestAcceptType
 type QuestDeliverType = QuestDeliverType.QuestDeliverType
@@ -124,7 +128,8 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 			task.wait()
 		end
 
-		return self:GetPlayerData(player)	
+		print(RoQuest._StaticQuests) -- Create parser for this
+--		return RoQuest._StaticQuests --self:GetPlayerData(player)	
 	end)
 
 	Players.PlayerAdded:Connect(function(player: Player)
@@ -438,13 +443,29 @@ function RoQuest:_GiveQuest(player: Player, questId: string, questProgress: Ques
 		self.OnQuestObjectiveChanged:Fire(player, questId, ...)
 	end)
 
-	questClone._QuestProgress = questProgress or QuestProgress {
-		QuestObjectiveProgresses = {},
-		QuestStatus = QuestStatus.InProgress,
-		CompletedCount = 0,
-		FirstCompletedTick = -1,
-		LastCompletedTick = -1,
-	}
+	local questObjectiveProgresses: {[string]: QuestObjectiveProgress} = {}
+
+	for _, questObjective: QuestObjective in questClone.QuestObjectives do
+		questObjectiveProgresses[questObjective.ObjectiveInfo.ObjectiveId] = table.clone(questObjective._QuestObjectiveProgress)
+	end
+
+	if questProgress then
+		for objectiveId: string, questObjectiveProgress: QuestObjectiveProgress in questObjectiveProgresses do
+			if not questProgress.QuestObjectiveProgresses[objectiveId] then
+				questProgress.QuestObjectiveProgresses[objectiveId] = questObjectiveProgress
+			end
+		end
+		questClone:_SetQuestProgress(questProgress)
+	else
+		questClone:_SetQuestProgress(QuestProgress {
+			QuestObjectiveProgresses = questObjectiveProgresses,
+			QuestStatus = QuestStatus.InProgress,
+			CompletedCount = 0,
+			FirstCompletedTick = -1,
+			LastCompletedTick = -1,
+		})
+	end
+
 	self._Quests[player][questId] = questClone
 	self._PlayerQuestData[player].InProgress[questId] = questClone:_GetQuestProgress()
 

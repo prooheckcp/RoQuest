@@ -245,15 +245,23 @@ Quest._Trove = newproxy() :: Trove
 
     @return Quest
 ]=]
-function Quest.new(properties: {[string]: any}): Quest    
+function Quest.new(properties: {[string]: any}): Quest
     local self: Quest = assertProperties(properties, Quest)
     self.OnQuestObjectiveChanged = Signal.new()
     self.OnQuestCompleted = Signal.new()
     self.OnQuestDelivered = Signal.new()
     self.OnQuestCanceled = Signal.new()
-    self.RequiredQuests = {}
-    self.LifeCycles = {}
-    self.QuestObjectives = {}
+
+    if not properties["RequiredQuests"] then
+        self.RequiredQuests = {}
+    end
+    if not properties["LifeCycles"] then
+        self.LifeCycles = {}
+    end
+    if not properties["QuestObjectives"] then
+        self.QuestObjectives = {}
+    end
+    
     self:_SetQuestProgress(QuestProgress {
         QuestObjectiveProgresses = {},
         QuestStatus = QuestStatus.NotStarted,
