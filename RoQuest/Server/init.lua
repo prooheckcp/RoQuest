@@ -147,7 +147,6 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 	end)
 
 	net:On("GetPlayerData", function(player: Player)
-		print("get player data!", self:GetPlayerData(player))
 		return self:GetPlayerData(player)
 	end)
 
@@ -155,7 +154,7 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 		while not self._PlayerQuestData[player] and player.Parent == Players do -- Wait for player to load
 			task.wait()
 		end
-		print("get network!")
+
 		return RoQuest._StaticNetworkParse
 	end)
 
@@ -171,7 +170,6 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 		task.spawn(self._PlayerAdded, self, player)
 	end
 
-	print("Init server!")
 	self._Initiated = true
 end
 

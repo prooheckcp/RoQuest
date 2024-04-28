@@ -13,7 +13,7 @@ local appleObjective = ObjectiveInfo.new {
 
 return Quest {
     Name = "Collect Apples", -- The name of our quest
-    Description = "Collect %s apples", -- The description that we will display to our user
+    Description = "Collect 10 apples", -- The description that we will display to our user
     QuestId = "AppleCollection2", -- A unique identifier to our quest
     QuestAcceptType = RoQuest.QuestAcceptType.Automatic, -- If the quest automatically gets accepted or rquires manual work
     QuestDeliverType = RoQuest.QuestDeliverType.Automatic, -- If the quest automatically gets delivered or requires manual work

@@ -45,10 +45,9 @@ local function updateInterface()
         local objectives: Frame = textContainer:WaitForChild("Objectives")
 
         for _, questObjective: QuestObjective in quest.QuestObjectives do
-            local objectiveTemplate: Frame = textContainer.Title:Clone()
-            --objectiveTemplate.ObjectiveInfo.
-            print(questObjective:Get(), questObjective.TargetProgress)
-            objectiveTemplate.Text = string.format(questObjective.Description, questObjective:Get(), questObjective:GetTargetProgress())
+            local objectiveTemplate: TextLabel = textContainer.Description:Clone()
+            objectiveTemplate.TextSize = 14
+            objectiveTemplate.Text = string.format(questObjective:GetDescription(), questObjective:Get(), questObjective:GetTargetProgress())
             objectiveTemplate.Parent = objectives
         end
 
