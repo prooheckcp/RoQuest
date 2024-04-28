@@ -262,6 +262,11 @@ function RoQuest:AddObjective(player: Player, objectiveId: string, amount: numbe
 		return
 	end
 	
+	if not self._StaticObjectiveReference[objectiveId] then
+		warn(string.format(WarningMessages.NoObjectiveId, objectiveId))
+		return
+	end
+
 	for questId: string in self._StaticObjectiveReference[objectiveId] do
 		local quest: Quest? = self:GetQuest(player, questId)
 

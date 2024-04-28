@@ -376,6 +376,44 @@ function Quest:GetObjective(objectiveId: number): number
 end
 
 --[=[
+    Gets teh target objective by the id
+
+    @param objectiveId string
+
+    @return number
+]=]
+function Quest:GetTargetObjective(objectiveId: string): number
+    local questObjective: QuestObjective = self:GetQuestObjective(objectiveId)
+
+    if not questObjective then
+        return 0
+    end
+
+    return questObjective:GetTargetProgress()
+end
+
+--[=[
+    Returns an array of quest objectives for this given quest
+
+    @return {[string]: QuestObjective} -- The index stands for the questId while the value stands for the QuestObjective class
+]=]
+function Quest:GetQuestObjectives(): {[string]: QuestObjective}
+    return self._QuestObjectives
+    
+end
+
+--[=[
+    Gets the objective by its id
+
+    @param objectiveId string
+
+    @return QuestObjective?
+]=]
+function Quest:GetQuestObjective(objectiveId: string): QuestObjective?
+    return self._QuestObjectives[objectiveId]
+end
+
+--[=[
     Sets the quest to complete if possible
 
     @return boolean

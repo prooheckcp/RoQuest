@@ -16,8 +16,37 @@ local clone = template:Clone()
 template:Destroy()
 template = clone
 
-local function updateQuestFrame(quest: Quest, frame: Frame)
+local function updateObjective(quest: Quest, objectiveId: string, newValue: number)
+    local existingFrame: Frame? = scrollingFrame:FindFirstChild(quest.QuestId)
 
+    if not existingFrame then
+        return
+    end
+
+    local objectivesWindow: Frame = existingFrame.TextContainer.Objectives
+    local objectiveText: TextLabel? = objectivesWindow:FindFirstChild(objectiveId)
+
+    if not objectiveText then
+        return
+    end
+
+    local questObjective: QuestObjective = quest:GetQuestObjective(objectiveId)
+
+
+    objectiveText.Text = string.format(questObjective:GetDescription(), newValue, questObjective:GetTargetProgress())
+end
+
+local function updateQuestFrame(quest: Quest, frame: Frame)
+    local textContainer: Frame = frame:WaitForChild("TextContainer")
+
+    if quest:GetQuestStatus() == QuestStatus.Completed then
+        textContainer.Description.Text = "Read to deliver!"
+    elseif quest:GetQuestStatus() == QuestStatus.Delivered then
+        frame:Destroy()
+    else
+        textContainer.Title.Text = quest.Name
+        textContainer.Description.Text = quest.Description
+    end
 end
 
 local function updateInterface()
@@ -44,8 +73,9 @@ local function updateInterface()
         textContainer.Description.Text = quest.Description
         local objectives: Frame = textContainer:WaitForChild("Objectives")
 
-        for _, questObjective: QuestObjective in quest.QuestObjectives do
+        for _, questObjective: QuestObjective in quest:GetQuestObjectives() do
             local objectiveTemplate: TextLabel = textContainer.Description:Clone()
+            objectiveTemplate.Name = questObjective:GetObjectiveId()
             objectiveTemplate.TextSize = 14
             objectiveTemplate.Text = string.format(questObjective:GetDescription(), questObjective:Get(), questObjective:GetTargetProgress())
             objectiveTemplate.Parent = objectives
@@ -62,7 +92,9 @@ RoQuest.OnStart():andThen(function()
     RoQuest.OnQuestDelivered:Connect(updateInterface)
     --RoQuest.OnQuestCancelled:Connect(updateInterface)
 
-    print("Quest system loaded!")
+    RoQuest.OnQuestObjectiveChanged:Connect(function(questId: string, objectiveId: string, newValue: number)
+        updateObjective(RoQuest:GetQuest(questId), objectiveId, newValue)
+    end)
 
     updateInterface()
 end)

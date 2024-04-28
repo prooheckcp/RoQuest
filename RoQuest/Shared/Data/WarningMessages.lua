@@ -4,4 +4,5 @@ return  {
     NoQuestById = "No quest with the id %s was found",
     DuplicateQuestId = "Duplicate quest id %s found",
     DuplicateLifeCycleName = "Duplicate life cycle name %s found",
+    NoObjectiveId = "No objective with the id %s exists in any of the loaded quests",
 }
