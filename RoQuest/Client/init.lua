@@ -2,12 +2,17 @@ local Red = require(script.Parent.Vendor.Red).Client
 local Signal = require(script.Parent.Vendor.Signal)
 local QuestLifeCycle = require(script.Parent.Shared.Classes.QuestLifeCycle)
 local Quest = require(script.Parent.Shared.Classes.Quest)
+local ObjectiveInfo = require(script.Parent.Shared.Classes.ObjectiveInfo)
 local WarningMessages = require(script.Parent.Shared.Data.WarningMessages)
 local PlayerQuestData = require(script.Parent.Shared.Structs.PlayerQuestData)
 local QuestProgress = require(script.Parent.Shared.Structs.QuestProgress)
 local QuestObjectiveProgress = require(script.Parent.Shared.Structs.QuestObjectiveProgress)
 local QuestObjective = require(script.Parent.Shared.Classes.QuestObjective)
+local QuestRepeatableType = require(script.Parent.Shared.Enums.QuestRepeatableType)
+local QuestDeliverType = require(script.Parent.Shared.Enums.QuestDeliverType)
+local QuestAcceptType = require(script.Parent.Shared.Enums.QuestAcceptType)
 local QuestStatus = require(script.Parent.Shared.Enums.QuestStatus)
+local Promise = require(script.Parent.Vendor.Promise)
 
 export type QuestStatus = QuestStatus.QuestStatus
 export type QuestObjective = QuestObjective.QuestObjective
@@ -25,12 +30,34 @@ RoQuest.OnQuestCompleted = Signal.new()
 RoQuest.OnQuestDelivered = Signal.new()
 RoQuest.OnQuestCancelled = Signal.new()
 RoQuest.OnQuestAvailable = Signal.new()
+RoQuest.Quest = Quest
 RoQuest.QuestLifeCycle = QuestLifeCycle
+RoQuest.ObjectiveInfo = ObjectiveInfo
+RoQuest.QuestAcceptType = QuestAcceptType
+RoQuest.QuestDeliverType = QuestDeliverType
+RoQuest.QuestRepeatableType = QuestRepeatableType
+RoQuest.QuestStatus = QuestStatus
 RoQuest._Initiated = false :: boolean
 RoQuest._StaticQuestLifeCycles = {} :: {[string]: QuestLifeCycle}
 RoQuest._StaticQuests = {} :: {[string]: Quest}
 RoQuest._Quests = {} :: {[string]: Quest}
-RoQuest._PlayerQuestData = {} :: PlayerQuestData
+RoQuest._PlayerQuestData = nil :: PlayerQuestData
+
+RoQuest.OnStart = function()
+	return Promise.new(function(resolve)
+		if RoQuest._Initiated then
+			resolve()
+			return
+		end
+
+		while not RoQuest._Initiated do
+			task.wait()
+		end
+
+		resolve()
+		return
+	end)
+end
 
 function RoQuest:Init(lifeCycles: {QuestLifeCycle}?): ()
     if self._Initiated then
@@ -38,10 +65,13 @@ function RoQuest:Init(lifeCycles: {QuestLifeCycle}?): ()
 		return
 	end
 
-    self._Initiated = true
     self:_LoadLifeCycles(lifeCycles or {})
 
 	local net = Red "QuestNamespace"
+
+	-- Need to change the way quests are loaded to allow for dynamic loading
+	local quests: {[string]: any} = net:Call("GetQuests"):Await()
+	self:_LoadQuests(quests)
 
 	net:On("OnPlayerDataChanged", function(playerQuestData: PlayerQuestData)
 		self:_OnPlayerDataChanged(playerQuestData)
@@ -71,13 +101,14 @@ function RoQuest:Init(lifeCycles: {QuestLifeCycle}?): ()
 		self:_OnQuestAvailable(questId)
 	end)
 
-	net:Call("GetPlayerData", function(playerQuestData: PlayerQuestData)
-		self:_OnPlayerDataChanged(playerQuestData)
-	end)
+	self:_OnPlayerDataChanged(net:Call("GetPlayerData"):Await())
 
-	-- Need to change the way quests are loaded to allow for dynamic loading
-	net:Call("GetQuests"):Then(function(quests: {[string]: any})
-		self:_LoadQuests(quests)
+	task.spawn(function()
+		while not self._PlayerQuestData do
+			task.wait()
+		end
+
+		self._Initiated = true		
 	end)
 end
 
@@ -125,6 +156,11 @@ end
 
 function RoQuest:_LoadQuests(questsData: {[string]: any}): ()
 	for questId: string, properties in questsData do
+		if properties.QuestObjectives then
+			for index: number, questObjective in properties.QuestObjectives do
+				properties.QuestObjectives[index] = setmetatable(questObjective, QuestObjective)
+			end
+		end
 		self._StaticQuests[questId] = Quest.new(properties)
 	end
 end

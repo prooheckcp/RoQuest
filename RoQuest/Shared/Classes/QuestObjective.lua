@@ -138,6 +138,83 @@ function QuestObjective:Get(): number
 end
 
 --[=[
+    Gets the target to complete this objective
+
+    ```lua
+    local appleObjective1 = appleQuest:NewObjective(5) -- Created an objective to collect 5 apples
+    print(appleObjective1:GetTargetProgress()) -- 5
+    ```
+
+    @return number
+]=]
+function QuestObjective:GetTargetProgress(): number
+    return self.TargetProgress
+end
+
+--[=[
+    Gets an id with the objective ID of the QuestObjective
+
+    ```lua
+    local flowerQuest = ObjectiveInfo.new {
+        ObjectiveId = "CollectFlowers",
+        Name = "Collect Flowers",
+        Description = "Collect %s flowers",
+    }
+
+    local appleObjective1 = appleQuest:NewObjective(5) -- Created an objective to collect 5 apples
+
+    print(appleObjective1:GetObjectiveId()) -- "CollectFlowers"
+    ```
+
+    @return string
+]=]
+function QuestObjective:GetObjectiveId(): string
+    return self.ObjectiveInfo.ObjectiveId or ""
+end
+
+--[=[
+    Gets an id with the objective ID of the QuestObjective
+
+    ```lua
+    local flowerQuest = ObjectiveInfo.new {
+        ObjectiveId = "CollectFlowers",
+        Name = "Collect Flowers",
+        Description = "Collect %s flowers",
+    }
+
+    local appleObjective1 = appleQuest:NewObjective(5) -- Created an objective to collect 5 apples
+
+    print(appleObjective1:GetName()) -- "Collect Flowers"
+    ```
+
+    @return string
+]=]
+function QuestObjective:GetName(): string
+    return self.ObjectiveInfo.Name or ""
+end
+
+--[=[
+    Gets an id with the objective ID of the QuestObjective
+
+    ```lua
+    local flowerQuest = ObjectiveInfo.new {
+        ObjectiveId = "CollectFlowers",
+        Name = "Collect Flowers",
+        Description = "Collect %s flowers",
+    }
+
+    local appleObjective1 = appleQuest:NewObjective(5) -- Created an objective to collect 5 apples
+
+    print(appleObjective1:GetDescription()) -- "Collect %s flowers"
+    ```
+
+    @return string
+]=]
+function QuestObjective:GetDescription(): string
+    return self.ObjectiveInfo.Description or ""
+end
+
+--[=[
     Adds an amount to the current progress of the objective
 
     ```lua

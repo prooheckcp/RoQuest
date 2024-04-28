@@ -17,6 +17,7 @@ local QuestDeliverType = require(script.Parent.Shared.Enums.QuestDeliverType)
 local QuestAcceptType = require(script.Parent.Shared.Enums.QuestAcceptType)
 local PlayerQuestData = require(script.Parent.Shared.Structs.PlayerQuestData)
 local networkQuestParser = require(script.Parent.Shared.Functions.networkQuestParser)
+local Promise = require(script.Parent.Vendor.Promise)
 
 export type QuestObjective = QuestObjective.QuestObjective
 export type QuestObjectiveProgress = QuestObjectiveProgress.QuestObjectiveProgress
@@ -66,6 +67,22 @@ RoQuest._PlayerQuestData = {} :: {[Player]: PlayerQuestData}
 RoQuest._AvailableQuests = {} :: {[Player]: {[string]: true}}
 RoQuest._UnavailableQuests = {} :: {[Player]: {[string]: true}}
 
+RoQuest.OnStart = function()
+	return Promise.new(function(resolve)
+		if RoQuest._Initiated then
+			resolve()
+			return
+		end
+
+		while not RoQuest._Initiated do
+			task.wait()
+		end
+
+		resolve()
+		return
+	end)
+end
+
 --[=[
 	:::info
 
@@ -86,7 +103,6 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 		return
 	end
 
-	self._Initiated = true
 	self:_LoadQuests(quests)
 	if lifeCycles then
 		self:_LoadLifeCycles(lifeCycles)
@@ -131,6 +147,7 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 	end)
 
 	net:On("GetPlayerData", function(player: Player)
+		print("get player data!", self:GetPlayerData(player))
 		return self:GetPlayerData(player)
 	end)
 
@@ -138,7 +155,7 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 		while not self._PlayerQuestData[player] and player.Parent == Players do -- Wait for player to load
 			task.wait()
 		end
-
+		print("get network!")
 		return RoQuest._StaticNetworkParse
 	end)
 
@@ -153,6 +170,9 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 	for _, player: Player in Players:GetPlayers() do
 		task.spawn(self._PlayerAdded, self, player)
 	end
+
+	print("Init server!")
+	self._Initiated = true
 end
 
 --[=[
