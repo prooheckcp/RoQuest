@@ -16,18 +16,19 @@ local QuestRepeatableType = require(script.Parent.Shared.Enums.QuestRepeatableTy
 local QuestDeliverType = require(script.Parent.Shared.Enums.QuestDeliverType)
 local QuestAcceptType = require(script.Parent.Shared.Enums.QuestAcceptType)
 local PlayerQuestData = require(script.Parent.Shared.Structs.PlayerQuestData)
+local networkQuestParser = require(script.Parent.Shared.Functions.networkQuestParser)
 
-type QuestObjective = QuestObjective.QuestObjective
-type QuestObjectiveProgress = QuestObjectiveProgress.QuestObjectiveProgress
-type ObjectiveInfo = ObjectiveInfo.ObjectiveInfo
-type QuestAcceptType = QuestAcceptType.QuestAcceptType
-type QuestDeliverType = QuestDeliverType.QuestDeliverType
-type QuestStatus = QuestStatus.QuestStatus
-type QuestRepeatableType = QuestRepeatableType.QuestRepeatableType
-type Quest = Quest.Quest
-type QuestLifeCycle = QuestLifeCycle.QuestLifeCycle
-type PlayerQuestData = PlayerQuestData.PlayerQuestData
-type QuestProgress = QuestProgress.QuestProgress
+export type QuestObjective = QuestObjective.QuestObjective
+export type QuestObjectiveProgress = QuestObjectiveProgress.QuestObjectiveProgress
+export type QuestAcceptType = QuestAcceptType.QuestAcceptType
+export type QuestDeliverType = QuestDeliverType.QuestDeliverType
+export type QuestStatus = QuestStatus.QuestStatus
+export type QuestRepeatableType = QuestRepeatableType.QuestRepeatableType
+export type ObjectiveInfo = ObjectiveInfo.ObjectiveInfo
+export type Quest = Quest.Quest
+export type QuestLifeCycle = QuestLifeCycle.QuestLifeCycle
+export type PlayerQuestData = PlayerQuestData.PlayerQuestData
+export type QuestProgress = QuestProgress.QuestProgress
 
 -- We want to give enough time for developers to get and save their player data
 local DATA_RELEASE_DELAY: number = 5
@@ -40,13 +41,13 @@ local LOAD_DIRECTORY_TYPES: {[string]: true} = {
 	@class RoQuest
 ]=]
 local RoQuest = {}
-RoQuest.PlayerFinishedLoading = Signal.new()
+RoQuest.OnPlayerDataChanged = Signal.new()
 RoQuest.OnQuestObjectiveChanged = Signal.new()
-RoQuest.OnQuestStarted = Signal.new()
-RoQuest.OnQuestCompleted = Signal.new()
-RoQuest.OnQuestDelivered = Signal.new()
-RoQuest.OnQuestCancelled = Signal.new()
-RoQuest.OnQuestAvailable = Signal.new()
+RoQuest.OnQuestStarted = Signal.new() -- Event (player: Player, questId: string)
+RoQuest.OnQuestCompleted = Signal.new() -- Event (player: Player, questId: string)
+RoQuest.OnQuestDelivered = Signal.new() -- Event (player: Player, questId: string)
+RoQuest.OnQuestCancelled = Signal.new() -- Event (player: Player, questId: string)
+RoQuest.OnQuestAvailable = Signal.new() -- Event (player: Player, questId: string)
 RoQuest.Quest = Quest
 RoQuest.QuestLifeCycle = QuestLifeCycle
 RoQuest.ObjectiveInfo = ObjectiveInfo
@@ -56,6 +57,7 @@ RoQuest.QuestRepeatableType = QuestRepeatableType
 RoQuest.QuestStatus = QuestStatus
 RoQuest._Initiated = false :: boolean
 RoQuest._StaticQuests = {} :: {[string]: Quest}
+RoQuest._StaticNetworkParse = {} :: {[string]: any}
 RoQuest._StaticQuestLifeCycles = {} :: {[string]: QuestLifeCycle}
 RoQuest._StaticAvailableQuests = {} :: {[string]: true}
 RoQuest._StaticObjectiveReference = {} :: {[string]: {[string]: true}}
@@ -97,39 +99,47 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 		"OnQuestDelivered",
 		"OnQuestCancelled",
 		"OnQuestAvailable",
+		"OnPlayerDataChanged",
 	})
 
-	self.OnQuestObjectiveChanged:Connect(function(player: Player)
-		net:Fire(player, "OnQuestObjectiveChanged")
+	self.OnQuestObjectiveChanged:Connect(function(player: Player, questId: string, objectiveId: string, newAmount: number)
+		net:Fire(player, "OnQuestObjectiveChanged", questId, objectiveId, newAmount)
 	end)
 
-	self.OnQuestStarted:Connect(function(player: Player)
-		net:Fire(player, "OnQuestStarted")
+	self.OnQuestStarted:Connect(function(player: Player, questId: string)
+		net:Fire(player, "OnQuestStarted", questId)
 	end)
 
-	self.OnQuestCompleted:Connect(function(player: Player)
-		net:Fire(player, "OnQuestCompleted")
+	self.OnQuestCompleted:Connect(function(player: Player, questId: string)
+		net:Fire(player, "OnQuestCompleted", questId)
 	end)
 
-	self.OnQuestDelivered:Connect(function(player: Player)
-		net:Fire(player, "OnQuestDelivered")
+	self.OnQuestDelivered:Connect(function(player: Player, questId: string)
+		net:Fire(player, "OnQuestDelivered", questId)
 	end)
 	
-	self.OnQuestCancelled:Connect(function(player: Player)
-		net:Fire(player, "OnQuestCancelled")
+	self.OnQuestCancelled:Connect(function(player: Player, questId: string)
+		net:Fire(player, "OnQuestCancelled", questId)
 	end)
 
-	self.OnQuestAvailable:Connect(function(player: Player)
-		net:Fire(player, "OnQuestAvailable")
+	self.OnQuestAvailable:Connect(function(player: Player, questId: string)
+		net:Fire(player, "OnQuestAvailable", questId)
+	end)
+
+	self.OnPlayerDataChanged:Connect(function(player: Player)
+		net:Fire(player, "OnPlayerDataChanged", self:GetPlayerData(player))
 	end)
 
 	net:On("GetPlayerData", function(player: Player)
+		return self:GetPlayerData(player)
+	end)
+
+	net:On("GetQuests", function(player: Player)
 		while not self._PlayerQuestData[player] and player.Parent == Players do -- Wait for player to load
 			task.wait()
 		end
 
-		print(RoQuest._StaticQuests) -- Create parser for this
---		return RoQuest._StaticQuests --self:GetPlayerData(player)	
+		return RoQuest._StaticNetworkParse
 	end)
 
 	Players.PlayerAdded:Connect(function(player: Player)
@@ -185,6 +195,15 @@ function RoQuest:GetStaticQuest(questId: string): Quest?
 end
 
 --[=[
+	Gets the static data of all of the cached quests
+
+	@return {[string]: Quest}
+]=]
+function RoQuest:GetStaticQuests(): {[string]: Quest}
+	return self._StaticQuests
+end
+
+--[=[
 	Gets a player quest object. It will return nil if the player has never started
 	the quest!
 
@@ -197,13 +216,17 @@ function RoQuest:GetQuest(player: Player, questId: string): Quest?
 	return self._Quests[player][questId]
 end
 
+function RoQuest:GetQuests(player: Player): {[string]: Quest}
+	return self._Quests[player] or {}
+end
+
 --[=[
 	
 ]=]
 function RoQuest:SetPlayerData(player: Player, data: PlayerQuestData): ()
 	self._PlayerQuestData[player] = data
 
-	self:_LoadPlayerData(player, data)
+	self:_LoadPlayerData(player)
 end
 
 --[=[
@@ -439,8 +462,8 @@ function RoQuest:_GiveQuest(player: Player, questId: string, questProgress: Ques
 		self:_QuestDelivered(player, questId)
 	end)
 
-	questClone.OnQuestObjectiveChanged:Connect(function(...)
-		self.OnQuestObjectiveChanged:Fire(player, questId, ...)
+	questClone.OnQuestObjectiveChanged:Connect(function(objectiveName: string, newValue: number)
+		self.OnQuestObjectiveChanged:Fire(player, questId, objectiveName, newValue)
 	end)
 
 	local questObjectiveProgresses: {[string]: QuestObjectiveProgress} = {}
@@ -493,7 +516,7 @@ function RoQuest:_LoadPlayerData(player: Player): ()
 		self:_NewPlayerAvailableQuest(player, questId)
 	end
 
-	self.PlayerFinishedLoading:Fire(player)
+	self.OnPlayerDataChanged:Fire(player, self:GetPlayerData(player))
 end
 
 --[=[
@@ -546,6 +569,7 @@ function RoQuest:_LoadQuests(quests: {Quest}): ()
 		end
 
 		self._StaticQuests[quest.QuestId] = quest
+		self._StaticNetworkParse[quest.QuestId] = networkQuestParser(quest)
 
 		local questStart: number = quest.QuestStart
 		local questEnd: number = quest.QuestEnd
