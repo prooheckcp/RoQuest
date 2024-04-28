@@ -6,6 +6,10 @@ RoQuest:Init(RoQuest:LoadDirectory(ReplicatedStorage.Quests))
 
 RoQuest.OnStart():andThen(function()
     RoQuest.OnQuestObjectiveChanged:Connect(function(...)
+        --print(...)
+    end)
+
+    RoQuest.OnQuestCompleted:Connect(function(...)
         print(...)
     end)
 end)

@@ -271,9 +271,9 @@ function QuestObjective:Set(newAmount: number): boolean
     if self:IsCompleted() then return false end -- No point on updating
     if self:Get() == newAmount then return false end -- Same value
 
-    self._QuestObjectiveProgress.CurrentProgress = newAmount
+    self._QuestObjectiveProgress.CurrentProgress = math.clamp(newAmount, 0, self.TargetProgress)
 
-    if newAmount > self.TargetProgress then
+    if newAmount >= self.TargetProgress then
         self._QuestObjectiveProgress.Completed = true
         self.Completed:Fire()
     end

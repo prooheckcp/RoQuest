@@ -354,7 +354,7 @@ function Quest:SetObjective(objectiveId: string, newAmount: number): ()
     end
 
     if questObjective:Set(newAmount) then
-        self.OnQuestObjectiveChanged:Fire(objectiveId, newAmount)
+        self.OnQuestObjectiveChanged:Fire(objectiveId, self:GetObjective(objectiveId))
     end
 end
 

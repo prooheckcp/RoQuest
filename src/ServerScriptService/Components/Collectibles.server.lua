@@ -12,7 +12,7 @@ local function collectibleAdded(instance: Instance, tag: string)
     local proximityPrompt: ProximityPrompt = Instance.new("ProximityPrompt")
     proximityPrompt.ActionText = "Collect"
     proximityPrompt.ObjectText = "Collect " .. tag
-    proximityPrompt.HoldDuration = 1.5
+    proximityPrompt.HoldDuration = 0.5
     proximityPrompt.Parent = instance:IsA("BasePart") and instance or instance.PrimaryPart or instance:FindFirstChildWhichIsA("BasePart")
 
     proximityPrompt.Triggered:Connect(function(playerWhoTriggered: Player)
