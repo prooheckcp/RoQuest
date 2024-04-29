@@ -3,6 +3,8 @@ local Players = game:GetService("Players")
 
 local RoQuest = require(ReplicatedStorage.RoQuest).Client
 
+type Quest = RoQuest.Quest
+
 local DEFAULT_COLOR: Color3 = Color3.fromRGB(140, 140, 140)
 local ACTIVE_COLOR: Color3 = Color3.fromRGB(255, 255, 127)
 
@@ -66,7 +68,15 @@ local function setupWindows()
     end
 end
 
+local function populateScreen(scrollingFrame: ScrollingFrame, quests: {Quest})
+    for _, child: Instance in scrollingFrame:GetChildren() do
+        if not child:IsA("Frame") then
+           continue
+        end
 
+        
+    end
+end
 
 RoQuest.OnStart():andThen(function()
     setupWindows()
