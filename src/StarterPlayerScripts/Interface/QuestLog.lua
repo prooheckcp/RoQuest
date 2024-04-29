@@ -14,23 +14,24 @@ local questLog: ScreenGui = playerGui:WaitForChild("QuestLog")
 local template: Frame = questLog.Container.Unavailable.Template:Clone()
 questLog.Container.Unavailable.Template:Destroy() -- Delete the template after we cached a clone
 
-local screens: {[string]: ScrollingFrame} = {}
-local buttons: {[string]: GuiButton} = {}
-local currentScreen: string = ""
+local QuestLog = {}
+QuestLog.screens = {} :: {[string]: ScrollingFrame}
+QuestLog.buttons = {} :: {[string]: GuiButton}
+QuestLog.currentScreen = "" :: string
 
-local function updateButtonColor()
-    for buttonName: string, button: GuiButton in buttons do
-        button.BackgroundColor3 = buttonName == currentScreen and ACTIVE_COLOR or DEFAULT_COLOR
+function QuestLog:UpdateButtonColor()
+    for buttonName: string, button: GuiButton in self.buttons do
+        button.BackgroundColor3 = buttonName == self.currentScreen and ACTIVE_COLOR or DEFAULT_COLOR
     end
 end
 
-local function setScreen(name: string)
-    if currentScreen == name then
+function QuestLog:SetScreen(name: string)
+    if self.currentScreen == name then
         return
     end
 
-    local currentScrollingFrame: ScrollingFrame? = screens[currentScreen]
-    local newScrollingFrame: ScrollingFrame? = screens[name]
+    local currentScrollingFrame: ScrollingFrame? = self.screens[self.currentScreen]
+    local newScrollingFrame: ScrollingFrame? = self.screens[name]
 
     if currentScrollingFrame then
         currentScrollingFrame.Visible = false
@@ -40,35 +41,35 @@ local function setScreen(name: string)
         newScrollingFrame.Visible = true
     end
 
-    currentScreen = name
-    updateButtonColor()
+    self.currentScreen = name
+    self:UpdateButtonColor()
 end
 
-local function setupButtons()
+function QuestLog:SetupButtons()
     for _, button: Instance in questLog.Container.Buttons:GetChildren() do
         if not button:IsA("GuiButton") then
             continue
         end
 
         (button :: GuiButton).Activated:Connect(function()
-            setScreen(button.Name)
+            self:SetScreen(button.Name)
         end)
 
-        buttons[button.Name] = button
+        self.buttons[button.Name] = button
     end
 end
 
-local function setupWindows()
+function QuestLog:SetupWindows()
     for _, child: Instance in questLog.Container:GetChildren() do
         if not child:IsA("ScrollingFrame") then
             continue
         end
 
-        screens[child.Name] = child
+        self.screens[child.Name] = child
     end
 end
 
-local function destroyQuest(scrollingFrame: ScrollingFrame, questId: string)
+function QuestLog:DestroyQuest(scrollingFrame: ScrollingFrame, questId: string)
     local frame: Frame? = scrollingFrame:FindFirstChild(questId)
 
     if frame then
@@ -76,7 +77,7 @@ local function destroyQuest(scrollingFrame: ScrollingFrame, questId: string)
     end
 end
 
-local function createQuest(scrollingFrame: ScrollingFrame, quest: Quest)
+function QuestLog:CreateQuest(scrollingFrame: ScrollingFrame, quest: Quest)
     local frame: Frame = scrollingFrame:FindFirstChild(quest.QuestId) or template:Clone()
     frame.Name = quest.QuestId
     frame.Title.Text = quest.Name
@@ -87,7 +88,7 @@ local function createQuest(scrollingFrame: ScrollingFrame, quest: Quest)
     frame.Parent = scrollingFrame
 end
 
-local function populateScreen(scrollingFrame: ScrollingFrame, quests: {[string]: Quest})
+function QuestLog:PopulateScreen(scrollingFrame: ScrollingFrame, quests: {[string]: Quest})
     for _, child: Instance in scrollingFrame:GetChildren() do -- Remove quests no longer in use
         if not child:IsA("Frame") then
            continue
@@ -99,42 +100,47 @@ local function populateScreen(scrollingFrame: ScrollingFrame, quests: {[string]:
     end
 
     for _, quest: Quest in quests do
-        createQuest(scrollingFrame, quest)
+        self:CreateQuest(scrollingFrame, quest)
     end
 end
 
-local function setAllScreens()
-    populateScreen(screens["InProgress"], RoQuest:GetInProgressQuests())
-    populateScreen(screens["Available"], RoQuest:GetAvailableQuests())
-    populateScreen(screens["Completed"], RoQuest:GetCompletedQuests())
-    populateScreen(screens["Delivered"], RoQuest:GetDeliveredQuests())
-    populateScreen(screens["Unavailable"], RoQuest:GetUnAvailableQuests())
+function QuestLog:SetAllScreens()
+    self:PopulateScreen(self.screens["InProgress"], RoQuest:GetInProgressQuests())
+    self:PopulateScreen(self.screens["Available"], RoQuest:GetAvailableQuests())
+    self:PopulateScreen(self.screens["Completed"], RoQuest:GetCompletedQuests())
+    self:PopulateScreen(self.screens["Delivered"], RoQuest:GetDeliveredQuests())
+    self:PopulateScreen(self.screens["Unavailable"], RoQuest:GetUnAvailableQuests())
 end
 
-RoQuest.OnStart():andThen(function()
-    setupWindows() -- Caching our windows
-    setupButtons() -- Caching our buttons
-    setScreen("InProgress") -- Setting the initial active screen
-    setAllScreens() -- Populating all screens
+function QuestLog:Init()
+    self:SetupWindows() -- Caching our windows
+    self:SetupButtons() -- Caching our buttons
+    self:SetScreen("InProgress") -- Setting the initial active screen
+    self:SetAllScreens() -- Populating all screens
 
     RoQuest.OnUnAvailableQuestChanged:Connect(function()
-        
+        self:PopulateScreen(self.screens["Unavailable"], RoQuest:GetUnAvailableQuests())
     end)
 
     RoQuest.OnAvailableQuestChanged:Connect(function()
-        
+        self:PopulateScreen(self.screens["Available"], RoQuest:GetAvailableQuests())
     end)
+
     RoQuest.OnCompletedQuestChanged:Connect(function()
-        
+        self:PopulateScreen(self.screens["Completed"], RoQuest:GetCompletedQuests())
     end)
     
     RoQuest.OnUnDeliveredQuestChanged:Connect(function()
-        
+        self:PopulateScreen(self.screens["Delivered"], RoQuest:GetDeliveredQuests())
     end)
 
     RoQuest.OnInProgressQuestChanged:Connect(function()
-        
+        self:PopulateScreen(self.screens["InProgress"], RoQuest:GetInProgressQuests())
     end)
     
-    RoQuest.OnPlayerDataChanged:Connect(setAllScreens) -- Hard reset our screens
-end)
+    RoQuest.OnPlayerDataChanged:Connect(function()
+        self:SetAllScreens()
+    end) -- Hard reset our screens    
+end
+
+return QuestLog

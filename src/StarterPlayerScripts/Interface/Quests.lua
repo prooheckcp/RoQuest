@@ -16,7 +16,9 @@ local clone = template:Clone()
 template:Destroy()
 template = clone
 
-local function updateObjective(quest: Quest, objectiveId: string, newValue: number)
+local Quests = {}
+
+function Quests:UpdateObjective(quest: Quest, objectiveId: string, newValue: number)
     local existingFrame: Frame? = scrollingFrame:FindFirstChild(quest.QuestId)
 
     if not existingFrame then
@@ -35,7 +37,7 @@ local function updateObjective(quest: Quest, objectiveId: string, newValue: numb
     objectiveText.Text = string.format(questObjective:GetDescription(), newValue, questObjective:GetTargetProgress())
 end
 
-local function updateQuestFrame(quest: Quest, frame: Frame)
+function Quests:UpdateQuestFrame(quest: Quest, frame: Frame)
     local textContainer: Frame = frame:WaitForChild("TextContainer")
 
     if quest:GetQuestStatus() == QuestStatus.Completed then
@@ -48,7 +50,7 @@ local function updateQuestFrame(quest: Quest, frame: Frame)
     end
 end
 
-local function updateInterface()
+function Quests:UpdateInterface()
     local quests: {[string]: Quest} = RoQuest:GetQuests()
 
     for _, instance: Instance in scrollingFrame:GetChildren() do -- Delete quests that dont exit
@@ -61,7 +63,7 @@ local function updateInterface()
         local existingFrame: Frame = scrollingFrame:FindFirstChild(questId)
 
         if existingFrame then
-            updateQuestFrame(quest, existingFrame)
+            self:UpdateQuestFrame(quest, existingFrame)
             continue -- Quest already exists
         end
 
@@ -81,30 +83,32 @@ local function updateInterface()
         end
 
         newTemplate.Parent = scrollingFrame
-        updateQuestFrame(quest, newTemplate)
+        self:UpdateQuestFrame(quest, newTemplate)
     end
 end
 
-RoQuest.OnStart():andThen(function()
+function Quests:Init()
     RoQuest.OnPlayerDataChanged:Connect(function()
-        updateInterface()
+        self:UpdateInterface()
     end)
     
     RoQuest.OnQuestCompleted:Connect(function()
-        updateInterface()
+        self:UpdateInterface()
     end)
     
     RoQuest.OnQuestDelivered:Connect(function()
-        updateInterface()
+        self:UpdateInterface()
     end)
 
     RoQuest.OnQuestCancelled:Connect(function()
-        updateInterface()
+        self:UpdateInterface()
     end)
 
     RoQuest.OnQuestObjectiveChanged:Connect(function(questId: string, objectiveId: string, newValue: number)
-        updateObjective(RoQuest:GetQuest(questId), objectiveId, newValue)
+        self:UpdateInterface(RoQuest:GetQuest(questId), objectiveId, newValue)
     end)
 
-    updateInterface()
-end)
+    self:UpdateInterface()    
+end
+
+return Quests
