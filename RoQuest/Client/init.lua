@@ -42,6 +42,7 @@ RoQuest._StaticQuestLifeCycles = {} :: {[string]: QuestLifeCycle}
 RoQuest._StaticQuests = {} :: {[string]: Quest}
 RoQuest._Quests = {} :: {[string]: Quest}
 RoQuest._AvailableQuests = {} :: {[string]: true}
+RoQuest._UnavailableQuests = {} :: {[string]: true}
 RoQuest._PlayerQuestData = nil :: PlayerQuestData
 
 RoQuest.OnStart = function()
@@ -153,6 +154,62 @@ end
 
 function RoQuest:GetQuests(): {[string]: Quest}
 	return self._Quests or {}
+end
+
+function RoQuest:GetCompletedQuests(): {Quest}
+	local quests: {Quest} = {}
+
+	for _, quest: Quest in self:GetQuests() do
+		if quest:GetQuestStatus() == QuestStatus.Completed then
+			quests[#quests+1] = quest
+		end
+	end
+
+	return quests
+end
+
+function RoQuest:GetDeliveredQuests(): {Quest}
+	local quests: {Quest} = {}
+
+	for _, quest: Quest in self:GetQuests() do
+		if quest:GetQuestStatus() == QuestStatus.Delivered then
+			quests[#quests+1] = quest
+		end
+	end
+
+	return quests
+end
+
+function RoQuest:GetInProgressQuests(): {Quest}
+	local quests: {Quest} = {}
+
+	for _, quest: Quest in self:GetQuests() do
+		if quest:GetQuestStatus() == QuestStatus.InProgress then
+			quests[#quests+1] = quest
+		end
+	end
+
+	return quests
+end
+
+function RoQuest:GetAvailableQuests(): {Quest}
+	local quests: {Quest} = {}
+
+	for questId: string in self._AvailableQuests do
+		quests[#quests+1] = self:GetStaticQuest(questId)
+	end
+
+	return quests
+end
+
+function RoQuest:GetUnAvailableQuests(): {Quest}
+	local quests: {Quest} = {}
+
+	for questId: string in self._UnavailableQuests do
+		quests[#quests+1] = self:GetStaticQuest(questId)
+	end
+
+	return quests
 end
 
 function RoQuest:_LoadQuests(questsData: {[string]: any}): ()
