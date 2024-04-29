@@ -68,22 +68,73 @@ local function setupWindows()
     end
 end
 
-local function populateScreen(scrollingFrame: ScrollingFrame, quests: {Quest})
-    for _, child: Instance in scrollingFrame:GetChildren() do
+local function destroyQuest(scrollingFrame: ScrollingFrame, questId: string)
+    local frame: Frame? = scrollingFrame:FindFirstChild(questId)
+
+    if frame then
+        frame:Destroy()
+    end
+end
+
+local function createQuest(scrollingFrame: ScrollingFrame, quest: Quest)
+    local frame: Frame = scrollingFrame:FindFirstChild(quest.QuestId) or template:Clone()
+    frame.Name = quest.QuestId
+    frame.Title.Text = quest.Name
+    frame.Description.Text = quest.Description
+    frame.Buttons.Cancel.Visible = quest:GetQuestStatus() == RoQuest.QuestStatus.InProgress
+
+    frame.Visible = true
+    frame.Parent = scrollingFrame
+end
+
+local function populateScreen(scrollingFrame: ScrollingFrame, quests: {[string]: Quest})
+    for _, child: Instance in scrollingFrame:GetChildren() do -- Remove quests no longer in use
         if not child:IsA("Frame") then
            continue
         end
 
-        
+        if not quests[child.Name] then
+            child:Destroy()
+        end
+    end
+
+    for _, quest: Quest in quests do
+        createQuest(scrollingFrame, quest)
     end
 end
 
-RoQuest.OnStart():andThen(function()
-    setupWindows()
-    setupButtons()
-    setScreen("InProgress")
+local function setAllScreens()
+    populateScreen(screens["InProgress"], RoQuest:GetInProgressQuests())
+    populateScreen(screens["Available"], RoQuest:GetAvailableQuests())
+    populateScreen(screens["Completed"], RoQuest:GetCompletedQuests())
+    populateScreen(screens["Delivered"], RoQuest:GetDeliveredQuests())
+    populateScreen(screens["Unavailable"], RoQuest:GetUnAvailableQuests())
+end
 
-    RoQuest.OnQuestCompleted:Connect(function()
+RoQuest.OnStart():andThen(function()
+    setupWindows() -- Caching our windows
+    setupButtons() -- Caching our buttons
+    setScreen("InProgress") -- Setting the initial active screen
+    setAllScreens() -- Populating all screens
+
+    RoQuest.OnUnAvailableQuestChanged:Connect(function()
         
     end)
+
+    RoQuest.OnAvailableQuestChanged:Connect(function()
+        
+    end)
+    RoQuest.OnCompletedQuestChanged:Connect(function()
+        
+    end)
+    
+    RoQuest.OnUnDeliveredQuestChanged:Connect(function()
+        
+    end)
+
+    RoQuest.OnInProgressQuestChanged:Connect(function()
+        
+    end)
+    
+    RoQuest.OnPlayerDataChanged:Connect(setAllScreens) -- Hard reset our screens
 end)
