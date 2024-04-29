@@ -1,15 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RoQuest = require(ReplicatedStorage.RoQuest).Server
+local appleObjective = require(ReplicatedStorage.ObjectiveInfos.Apple)
 
-local ObjectiveInfo = RoQuest.ObjectiveInfo
 local Quest = RoQuest.Quest
-
-local appleObjective = ObjectiveInfo.new {
-    Description = "%s/%s apples collected",
-    Name = "Collect Apples",
-    ObjectiveId = "Apple",
-}
 
 return Quest {
     Name = "Collect Apples", -- The name of our quest

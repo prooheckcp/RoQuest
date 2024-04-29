@@ -1,15 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RoQuest = require(ReplicatedStorage.RoQuest).Server
+local flowerObjective = require(ReplicatedStorage.ObjectiveInfos.Flower)
 
-local ObjectiveInfo = RoQuest.ObjectiveInfo
 local Quest = RoQuest.Quest
-
-local appleObjective = ObjectiveInfo.new {
-    Description = "%s/%s flowers collected",
-    Name = "Collect Flowers",
-    ObjectiveId = "Flower",
-}
 
 return Quest {
     Name = "Collect Flowers", -- The name of our quest
@@ -21,8 +15,8 @@ return Quest {
     QuestStart = -1, -- UTC time to define when the quest should become available (specially useful for event quests)
     QuestEnd = -1, -- UTC time to define when the quest should no longer be available (specially useful for event quests)
     RequiredQuests = {"AppleCollection2"}, -- A list of quests that are required to be delivered before this quest can be started
-    LifeCycles = {"AppleQuest"}, -- The lifecycles that will manage this quest's behavior
+    LifeCycles = {"FlowerQuest"}, -- The lifecycles that will manage this quest's behavior
     QuestObjectives = {
-        appleObjective:NewObjective(4)
+        flowerObjective:NewObjective(4)
     }, 
 }
