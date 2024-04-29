@@ -32,13 +32,13 @@ local function updateObjective(quest: Quest, objectiveId: string, newValue: numb
 
     local questObjective: QuestObjective = quest:GetQuestObjective(objectiveId)
 
-
     objectiveText.Text = string.format(questObjective:GetDescription(), newValue, questObjective:GetTargetProgress())
 end
 
 local function updateQuestFrame(quest: Quest, frame: Frame)
     local textContainer: Frame = frame:WaitForChild("TextContainer")
 
+    print("quest status: ", quest:GetQuestStatus())
     if quest:GetQuestStatus() == QuestStatus.Completed then
         textContainer.Description.Text = "Read to deliver!"
     elseif quest:GetQuestStatus() == QuestStatus.Delivered then

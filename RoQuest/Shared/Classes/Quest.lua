@@ -421,11 +421,20 @@ end
 function Quest:Complete(): boolean
     if self:GetQuestStatus() ~= QuestStatus.InProgress then return false end
 
-    self:_GetQuestProgress().QuestStatus = QuestStatus.Completed
+    local questProgress: QuestProgress = self:_GetQuestProgress()
+    questProgress.CompletedCount += 1
+    questProgress.LastCompletedTick = os.time()
+    questProgress.QuestStatus = QuestStatus.Completed
+
+    if questProgress.FirstCompletedTick == nil then
+        questProgress.FirstCompletedTick = questProgress.LastCompletedTick
+    end
+
     self.OnQuestCompleted:Fire()
 
     if self.QuestDeliverType == QuestDeliverType.Automatic then
-        self:Deliver()
+        -- The scheduler sometimes schedules the deliver before the complete, this ensures it will only schedule delivered afterwards
+        task.delay(0, self.Deliver, self)
     end
 
     return true

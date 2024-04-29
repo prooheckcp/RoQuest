@@ -9,7 +9,11 @@ RoQuest.OnStart():andThen(function()
         --print(...)
     end)
 
+    RoQuest.OnQuestStarted:Connect(function(...)
+        print("QUEST STARTED LEZGOOO")
+    end)
+
     RoQuest.OnQuestCompleted:Connect(function(...)
-        print(...)
+        print("QUEST COMPLETED LEZGOOOOOOO")
     end)
 end)

@@ -41,6 +41,7 @@ RoQuest._Initiated = false :: boolean
 RoQuest._StaticQuestLifeCycles = {} :: {[string]: QuestLifeCycle}
 RoQuest._StaticQuests = {} :: {[string]: Quest}
 RoQuest._Quests = {} :: {[string]: Quest}
+RoQuest._AvailableQuests = {} :: {[string]: true}
 RoQuest._PlayerQuestData = nil :: PlayerQuestData
 
 RoQuest.OnStart = function()
@@ -173,11 +174,11 @@ function RoQuest:_OnPlayerDataChanged(playerQuestData: PlayerQuestData)
 	end
 
 	for questId: string, questProgress: QuestProgress in playerQuestData.Completed do
-		self:_CompleteQuest(questId, questProgress)
+		self:_GiveQuest(questId, questProgress)
 	end
 
 	for questId: string, questProgress: QuestProgress in playerQuestData.Delivered do
-		self:_DeliverQuest(questId, questProgress)
+		self:_GiveQuest(questId, questProgress)
 	end
 
 	self.OnPlayerDataChanged:Fire(playerQuestData)
@@ -193,29 +194,46 @@ function RoQuest:_OnQuestObjectiveChanged(questId: string, objectiveId: string, 
 end
 
 function RoQuest:_OnQuestStarted(questId: string): ()
-	if self:_GiveQuest(questId) then
-		self.OnQuestStarted:Fire(questId)
-	end
+	self:_GiveQuest(questId)
+	self.OnQuestStarted:Fire(questId)
 end
 
 function RoQuest:_OnQuestCompleted(questId: string): ()
-	if self:_CompleteQuest(questId) then
-		self.OnQuestCompleted:Fire(questId)
+	local quest: Quest? = self:GetQuest(questId)
+
+	if not quest then
+		return
 	end
+
+	quest:Complete()
 end
 
 function RoQuest:_OnQuestDelivered(questId: string): ()
-	if self:_DeliverQuest(questId) then
-		self.OnQuestDelivered:Fire(questId)
+	local quest: Quest? = self:GetQuest(questId)
+
+	if not quest then
+		return
 	end
+
+	quest:Deliver()
 end
 
-function RoQuest:_OnQuestCancelled(questId: string)
-	
+function RoQuest:_OnQuestCancelled(questId: string): ()
+	local quest: Quest? = self:GetQuest(questId)
+
+	if not quest or quest:GetQuestStatus() == QuestStatus.Delivered then
+		return
+	end
+
+	quest.OnQuestCanceled:Fire()
+	self._Quests[questId] = nil
+	self._PlayerQuestData[quest:GetQuestStatus()][questId] = nil
+	quest:Destroy()
+	self.OnQuestCancelled:Fire(questId)
 end
 
 function RoQuest:_OnQuestAvailable(questId: string)
-	
+	self._AvailableQuests[questId] = true
 end
 
 function RoQuest:_GiveQuest(questId: string, questProgress: QuestProgress?): boolean
@@ -251,24 +269,33 @@ function RoQuest:_GiveQuest(questId: string, questProgress: QuestProgress?): boo
 		})
 	end
 
+	self._AvailableQuests[questId] = nil
 	self._Quests[questId] = questClone
 	self._PlayerQuestData.InProgress[questId] = questClone:_GetQuestProgress()
 
 	return true
 end
 
-function RoQuest:_CompleteQuest(questId: string, questProgress: QuestProgress?): boolean
-	if questProgress then
-		return self:_GiveQuest(questId, questProgress)
+function RoQuest:_QuestCompleted(questId: string): ()
+	local quest: Quest? = self:GetQuest(questId)
+
+	if not quest then
+		return
 	end
 
-
+	self._PlayerQuestData.InProgress[questId] = nil
+	self._PlayerQuestData.Completed[questId] = quest:_GetQuestProgress()
 end
 
-function RoQuest:_DeliverQuest(questId: string, questProgress: QuestProgress?): boolean
-	if questProgress then
-		return self:_GiveQuest(questId, questProgress)
+function RoQuest:_QuestDelivered(questId: string): ()
+	local quest: Quest? = self:GetQuest(questId)
+
+	if not quest then
+		return
 	end
+
+	self._PlayerQuestData.Completed[questId] = nil
+	self._PlayerQuestData.Delivered[questId] = quest:_GetQuestProgress()
 end
 
 --[=[

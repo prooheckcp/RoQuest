@@ -58,6 +58,7 @@ RoQuest.QuestRepeatableType = QuestRepeatableType
 RoQuest.QuestStatus = QuestStatus
 RoQuest._Initiated = false :: boolean
 RoQuest._StaticQuests = {} :: {[string]: Quest}
+RoQuest._RequiredQuestPointer = {} :: {[string]: {[string]: true}}
 RoQuest._StaticNetworkParse = {} :: {[string]: any}
 RoQuest._StaticQuestLifeCycles = {} :: {[string]: QuestLifeCycle}
 RoQuest._StaticAvailableQuests = {} :: {[string]: true}
@@ -111,8 +112,8 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 	local net = Red.Server("QuestNamespace", {
 		"OnQuestObjectiveChanged",
 		"OnQuestStarted",
-		"OnQuestCompleted",
 		"OnQuestDelivered",
+		"OnQuestCompleted",
 		"OnQuestCancelled",
 		"OnQuestAvailable",
 		"OnPlayerDataChanged",
@@ -399,6 +400,12 @@ function RoQuest:_QuestCompleted(player: Player, questId: string): ()
 		return
 	end
 
+	if self._RequiredQuestPointer[questId] then
+		for requiredQuestId: string in self._RequiredQuestPointer[questId] do
+			self:_NewPlayerAvailableQuest(player, requiredQuestId)
+		end
+	end
+
 	self._PlayerQuestData[player].InProgress[questId] = nil
 	self._PlayerQuestData[player].Completed[questId] = quest:_GetQuestProgress()
 end
@@ -512,6 +519,7 @@ function RoQuest:_GiveQuest(player: Player, questId: string, questProgress: Ques
 		})
 	end
 
+	self._AvailableQuests[player][questId] = nil
 	self._Quests[player][questId] = questClone
 	self._PlayerQuestData[player].InProgress[questId] = questClone:_GetQuestProgress()
 
@@ -597,6 +605,14 @@ function RoQuest:_LoadQuests(quests: {Quest}): ()
 		local questStart: number = quest.QuestStart
 		local questEnd: number = quest.QuestEnd
 		local currentTime: number = os.time()
+
+		for _, requiredQuest: string in quest.RequiredQuests do
+			if not self._RequiredQuestPointer[requiredQuest] then
+				self._RequiredQuestPointer[requiredQuest] = {}
+			end
+
+			self._RequiredQuestPointer[requiredQuest][quest.QuestId] = true
+		end
 
 		for objectiveId: string in quest._QuestObjectives do
 			if not self._StaticObjectiveReference[objectiveId] then
