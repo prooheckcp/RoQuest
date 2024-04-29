@@ -244,6 +244,16 @@ function RoQuest:_GiveQuest(questId: string, questProgress: QuestProgress?): boo
 	local questClone: Quest = table.clone(self:GetStaticQuest(questId))
 	local questObjectiveProgresses: {[string]: QuestObjectiveProgress} = {}
 
+	questClone.OnQuestCompleted:Connect(function()
+		self.OnQuestCompleted:Fire(questId)
+		self:_QuestCompleted(questId)
+	end)
+
+	questClone.OnQuestDelivered:Connect(function()
+		self.OnQuestDelivered:Fire(questId)
+		self:_QuestDelivered(questId)
+	end)
+
 	questClone.OnQuestObjectiveChanged:Connect(function(objectiveName: string, newValue: number)
 		self.OnQuestObjectiveChanged:Fire(questId, objectiveName, newValue)
 	end)

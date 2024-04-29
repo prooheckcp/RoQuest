@@ -400,12 +400,6 @@ function RoQuest:_QuestCompleted(player: Player, questId: string): ()
 		return
 	end
 
-	if self._RequiredQuestPointer[questId] then
-		for requiredQuestId: string in self._RequiredQuestPointer[questId] do
-			self:_NewPlayerAvailableQuest(player, requiredQuestId)
-		end
-	end
-
 	self._PlayerQuestData[player].InProgress[questId] = nil
 	self._PlayerQuestData[player].Completed[questId] = quest:_GetQuestProgress()
 end
@@ -419,6 +413,12 @@ function RoQuest:_QuestDelivered(player: Player, questId: string): ()
 
 	self._PlayerQuestData[player].Completed[questId] = nil
 	self._PlayerQuestData[player].Delivered[questId] = quest:_GetQuestProgress()
+
+	if self._RequiredQuestPointer[questId] then
+		for requiredQuestId: string in self._RequiredQuestPointer[questId] do
+			self:_NewPlayerAvailableQuest(player, requiredQuestId)
+		end
+	end
 end
 
 --[=[
