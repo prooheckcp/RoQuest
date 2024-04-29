@@ -23,6 +23,6 @@ return Quest {
     RequiredQuests = {}, -- A list of quests that are required to be delivered before this quest can be started
     LifeCycles = {"AppleQuest"}, -- The lifecycles that will manage this quest's behavior
     QuestObjectives = {
-        appleObjective:NewObjective(5)
+        appleObjective:NewObjective(2)
     }, 
 }

@@ -38,7 +38,6 @@ end
 local function updateQuestFrame(quest: Quest, frame: Frame)
     local textContainer: Frame = frame:WaitForChild("TextContainer")
 
-    print("quest status: ", quest:GetQuestStatus())
     if quest:GetQuestStatus() == QuestStatus.Completed then
         textContainer.Description.Text = "Read to deliver!"
     elseif quest:GetQuestStatus() == QuestStatus.Delivered then
@@ -87,10 +86,21 @@ local function updateInterface()
 end
 
 RoQuest.OnStart():andThen(function()
-    RoQuest.OnPlayerDataChanged:Connect(updateInterface)
-    RoQuest.OnQuestCompleted:Connect(updateInterface)
-    RoQuest.OnQuestDelivered:Connect(updateInterface)
-    --RoQuest.OnQuestCancelled:Connect(updateInterface)
+    RoQuest.OnPlayerDataChanged:Connect(function()
+        updateInterface()
+    end)
+    
+    RoQuest.OnQuestCompleted:Connect(function()
+        updateInterface()
+    end)
+    
+    RoQuest.OnQuestDelivered:Connect(function()
+        updateInterface()
+    end)
+
+    RoQuest.OnQuestCancelled:Connect(function()
+        updateInterface()
+    end)
 
     RoQuest.OnQuestObjectiveChanged:Connect(function(questId: string, objectiveId: string, newValue: number)
         updateObjective(RoQuest:GetQuest(questId), objectiveId, newValue)
