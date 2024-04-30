@@ -5,15 +5,15 @@ local RoQuest = require(ReplicatedStorage.RoQuest).Server
 RoQuest:Init(RoQuest:LoadDirectory(ReplicatedStorage.Quests))
 
 RoQuest.OnStart():andThen(function()
-    RoQuest.OnQuestObjectiveChanged:Connect(function(...)
-        --print(...)
+    RoQuest.OnQuestObjectiveChanged:Connect(function()
+
     end)
 
-    RoQuest.OnQuestStarted:Connect(function(...)
-        print("QUEST STARTED LEZGOOO", ...)
+    RoQuest.OnQuestStarted:Connect(function()
+
     end)
 
-    RoQuest.OnQuestCompleted:Connect(function(...)
-        print("QUEST COMPLETED LEZGOOOOOOO", ...)
+    RoQuest.OnQuestCompleted:Connect(function()
+
     end)
 end)

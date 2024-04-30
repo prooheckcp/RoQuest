@@ -481,7 +481,9 @@ function RoQuest:_GiveQuest(player: Player, questId: string, questProgress: Ques
 		return false
 	end
 
-	local questClone: Quest = table.clone(self:GetStaticQuest(questId))
+	local questProperties = self._StaticNetworkParse[questId]
+	local questClone: Quest = Quest.new(table.clone(questProperties))
+
 	questClone.OnQuestCompleted:Connect(function()
 		self.OnQuestCompleted:Fire(player, questId)
 		self:_QuestCompleted(player, questId)

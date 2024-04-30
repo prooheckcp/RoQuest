@@ -246,6 +246,7 @@ Quest._Trove = newproxy() :: Trove
     @return Quest
 ]=]
 function Quest.new(properties: {[string]: any}): Quest
+    properties = properties or {}
     local self: Quest = assertProperties(properties, Quest)
     self.OnQuestObjectiveChanged = Signal.new()
     self.OnQuestCompleted = Signal.new()
@@ -351,6 +352,7 @@ function Quest:SetObjective(objectiveId: string, newAmount: number): ()
 
     if not questObjective then
         warn(string.format(NO_OBJECTIVE, objectiveId, self.Name))
+        return
     end
 
     if questObjective:Set(newAmount) then
