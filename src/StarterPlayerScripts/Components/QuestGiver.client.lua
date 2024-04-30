@@ -2,6 +2,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 
 local RoQuest = require(ReplicatedStorage.RoQuest).Client
+local Hud = require(script.Parent.Parent.Interface.Hud)
+local Prompt = require(script.Parent.Parent.Interface.Prompt)
 
 local TAG: string = "QuestGiver"
 
@@ -23,7 +25,8 @@ local function questGiverAdded(instance: Instance)
     end)
 
     clickDetector.MouseClick:Connect(function()
-        -- Set quest
+        Prompt:SetQuest(questId)
+        Hud:EnableScreen("QuestPrompt")
     end)
 
     clickDetector.Parent = instance

@@ -7,7 +7,7 @@ local Quest = RoQuest.Quest
 
 return Quest {
     Name = "Collect Apples", -- The name of our quest
-    Description = "Collect 5 apples", -- The description that we will display to our user
+    Description = "Collect 2 apples", -- The description that we will display to our user
     QuestId = "AppleCollection", -- A unique identifier to our quest
     QuestAcceptType = RoQuest.QuestAcceptType.Automatic, -- If the quest automatically gets accepted or rquires manual work
     QuestDeliverType = RoQuest.QuestDeliverType.Automatic, -- If the quest automatically gets delivered or requires manual work
