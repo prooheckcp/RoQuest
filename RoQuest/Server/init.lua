@@ -575,6 +575,8 @@ function RoQuest:_NewPlayerAvailableQuest(player: Player, questId: string)
 		return
 	end
 
+	self._UnavailableQuests[player][questId] = nil
+
 	if quest.QuestAcceptType == QuestAcceptType.Automatic then
 		self:GiveQuest(player, questId)
 	else

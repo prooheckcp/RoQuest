@@ -9,11 +9,13 @@ RoQuest.OnStart():andThen(function()
 
     end)
 
-    RoQuest.OnQuestStarted:Connect(function()
+    RoQuest.OnQuestCompleted:Connect(function()
 
     end)
 
-    RoQuest.OnQuestCompleted:Connect(function()
-
+    RoQuest.OnQuestDelivered:Connect(function()
+        task.wait(1)
+        print("Available: ", RoQuest._AvailableQuests)
+        print("Unavailable: ", RoQuest._UnavailableQuests)
     end)
 end)
