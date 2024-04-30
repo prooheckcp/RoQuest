@@ -4,10 +4,12 @@ local Players = game:GetService("Players")
 local localPlayer: Player = Players.LocalPlayer
 local playerGui: PlayerGui = localPlayer:WaitForChild("PlayerGui")
 local questLog: ScreenGui = playerGui:WaitForChild("QuestLog")
+local prompts: ScreenGui = playerGui:WaitForChild("Prompts")
 local hud: ScreenGui = playerGui:WaitForChild("HUD")
 
 local screens = {
     QuestLog = questLog.Container,
+    QuestPrompt = prompts.QuestPrompt,
 }
 
 local Hud = {}
@@ -19,13 +21,14 @@ function Hud:DisableScreen(screenName: string)
     end
     
     screens[screenName].Visible = false
+    self.currentScreen = ""
 end
 
 function Hud:EnableScreen(screenName: string)
+    local currentScreen = self.currentScreen
     self:DisableScreen(self.currentScreen)
 
-    if screenName == self.currentScreen then
-        self.currentScreen = ""
+    if screenName == currentScreen then
         return
     end
 
