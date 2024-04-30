@@ -49,6 +49,7 @@ RoQuest.OnQuestCompleted = Signal.new() -- Event (player: Player, questId: strin
 RoQuest.OnQuestDelivered = Signal.new() -- Event (player: Player, questId: string)
 RoQuest.OnQuestCancelled = Signal.new() -- Event (player: Player, questId: string)
 RoQuest.OnQuestAvailable = Signal.new() -- Event (player: Player, questId: string)
+RoQuest.OnQuestUnavailable = Signal.new() -- Event (player: Player, questId: string)
 RoQuest.Quest = Quest
 RoQuest.QuestLifeCycle = QuestLifeCycle
 RoQuest.ObjectiveInfo = ObjectiveInfo
@@ -631,12 +632,13 @@ function RoQuest:_LoadQuests(quests: {Quest}): ()
 			questStart == questEnd
 		then
 			self:_QuestBecameAvailable(quest.QuestId)
-
+			
 			if questEnd > currentTime and questEnd > questStart then
 				task.delay(questEnd - currentTime, self._QuestBecameUnavailable, self, quest.QuestId)
 			end
 		elseif currentTime < questStart then
 			task.delay(questStart - currentTime, self._QuestBecameAvailable, self, quest.QuestId)
+			task.delay(questEnd - currentTime, self._QuestBecameUnavailable, self, quest.QuestId)
 		end
 	end
 end

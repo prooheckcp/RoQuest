@@ -5,17 +5,15 @@ local RoQuest = require(ReplicatedStorage.RoQuest).Server
 RoQuest:Init(RoQuest:LoadDirectory(ReplicatedStorage.Quests))
 
 RoQuest.OnStart():andThen(function()
-    RoQuest.OnQuestObjectiveChanged:Connect(function()
-
+    RoQuest.OnQuestStarted:Connect(function(player: Player, questId: string)
+        print("Quest Started:", player, questId)
     end)
 
-    RoQuest.OnQuestCompleted:Connect(function()
-
+    RoQuest.OnQuestAvailable:Connect(function(player: Player, questId: string)
+        print("Quest Available: ", player, questId)
     end)
 
-    RoQuest.OnQuestDelivered:Connect(function()
-        task.wait(1)
-        print("Available: ", RoQuest._AvailableQuests)
-        print("Unavailable: ", RoQuest._UnavailableQuests)
+    RoQuest.OnQuestUnavailable:Connect(function(player: Player, questId: string)
+        print("Quest Unavailable: ", player, questId)
     end)
 end)

@@ -92,6 +92,10 @@ function Quests:Init()
         self:UpdateInterface()
     end)
     
+    RoQuest.OnQuestStarted:Connect(function()
+        self:UpdateInterface()
+    end)
+
     RoQuest.OnQuestCompleted:Connect(function()
         self:UpdateInterface()
     end)
