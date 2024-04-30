@@ -105,7 +105,7 @@ function Quests:Init()
     end)
 
     RoQuest.OnQuestObjectiveChanged:Connect(function(questId: string, objectiveId: string, newValue: number)
-        self:UpdateInterface(RoQuest:GetQuest(questId), objectiveId, newValue)
+        self:UpdateObjective(RoQuest:GetQuest(questId), objectiveId, newValue)
     end)
 
     self:UpdateInterface()    
