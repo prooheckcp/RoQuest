@@ -25,6 +25,10 @@ local function questGiverAdded(instance: Instance)
     end)
 
     clickDetector.MouseClick:Connect(function()
+        if not RoQuest:CanGiveQuest(questId) then
+            return
+        end
+        
         Prompt:SetQuest(questId)
         Hud:EnableScreen("QuestPrompt")
     end)

@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RoQuest = require(ReplicatedStorage.RoQuest).Client
+local Red = require(ReplicatedStorage.RoQuest.Vendor.Red).Client
 local Hud = require(script.Parent.Hud)
 
 type Quest = RoQuest.Quest
@@ -19,6 +20,7 @@ local buttons: Frame = questPrompt.Buttons
 objectivesFrame.Template:Destroy()
 
 local Prompt = {}
+Prompt._CurrentQuestId = ""
 
 function Prompt:SetQuest(questId: string)
     local quest: Quest? = RoQuest:GetStaticQuest(questId)
@@ -41,11 +43,16 @@ function Prompt:SetQuest(questId: string)
         newTemplate.Text = string.format(questObjective:GetDescription(), "0", questObjective:GetTargetProgress())
         newTemplate.Parent = objectivesFrame
     end
+
+    self._CurrentQuestId = questId
 end
 
-function Prompt:Init() 
+function Prompt:Init()
+    local Net = Red "QuestManager"
+
     buttons.Accept.Activated:Connect(function()
-        print("Activate!")
+        Net:Fire("AcceptQuest", self._CurrentQuestId)
+        Hud:DisableScreen("QuestPrompt")
     end)
 
     buttons.Decline.Activated:Connect(function()

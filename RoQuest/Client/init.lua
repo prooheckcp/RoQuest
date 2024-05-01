@@ -108,6 +108,10 @@ function RoQuest:Init(lifeCycles: {QuestLifeCycle}?): ()
 		self:_OnQuestAvailable(questId)
 	end)
 
+	net:On("OnQuestUnavailable", function(questId: string)
+		self:_OnQuestUnavailable(questId)
+	end)
+
 	self:_OnPlayerDataChanged(net:Call("GetPlayerData"):Await())
 
 	task.spawn(function()
@@ -217,6 +221,10 @@ function RoQuest:GetUnAvailableQuests(): {[string]: Quest}
 	return quests
 end
 
+function RoQuest:CanGiveQuest(questId: string): boolean
+	return self._AvailableQuests[questId]
+end
+
 function RoQuest:_LoadQuests(questsData: {[string]: any}): ()
 	for questId: string, properties in questsData do
 		if properties.QuestObjectives then
@@ -296,6 +304,10 @@ end
 
 function RoQuest:_OnQuestAvailable(questId: string)
 	self._AvailableQuests[questId] = true
+end
+
+function RoQuest:_OnQuestUnavailable(questId: string)
+	self._UnavailableQuests[questId] = true
 end
 
 function RoQuest:_GiveQuest(questId: string, questProgress: QuestProgress?): boolean

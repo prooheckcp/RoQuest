@@ -117,6 +117,7 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 		"OnQuestCompleted",
 		"OnQuestCancelled",
 		"OnQuestAvailable",
+		"OnQuestUnavailable",
 		"OnPlayerDataChanged",
 	})
 
@@ -142,6 +143,10 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 
 	self.OnQuestAvailable:Connect(function(player: Player, questId: string)
 		net:Fire(player, "OnQuestAvailable", questId)
+	end)
+
+	self.OnQuestUnavailable:Connect(function(player: Player, questId: string)
+		net:Fire(player, "OnQuestUnavailable", questId)
 	end)
 
 	self.OnPlayerDataChanged:Connect(function(player: Player)
@@ -238,6 +243,56 @@ end
 
 function RoQuest:GetQuests(player: Player): {[string]: Quest}
 	return self._Quests[player] or {}
+end
+
+function RoQuest:GetCompletedQuests(player: Player): {[string]: Quest}
+	local quests: {[string]: Quest} = {}
+
+	for questId: string in self:GetPlayerData(player).Completed do
+		quests[questId] = self:GetQuest(player, questId)
+	end
+
+	return quests
+end
+
+function RoQuest:GetDeliveredQuests(player: Player): {[string]: Quest}
+	local quests: {[string]: Quest} = {}
+
+	for questId: string in self:GetPlayerData(player).Delivered do
+		quests[questId] = self:GetQuest(player, questId)
+	end
+
+	return quests
+end
+
+function RoQuest:GetInProgressQuests(player: Player): {[string]: Quest}
+	local quests: {[string]: Quest} = {}
+
+	for questId: string in self:GetPlayerData(player).InProgress do
+		quests[questId] = self:GetQuest(player, questId)
+	end
+
+	return quests
+end
+
+function RoQuest:GetAvailableQuests(player: Player): {[string]: Quest}
+	local quests: {[string]: Quest} = {}
+
+	for questId: string in self._AvailableQuests[player] do
+		quests[questId] = self:GetStaticQuest(questId)
+	end
+
+	return quests
+end
+
+function RoQuest:GetUnAvailableQuests(player: Player): {[string]: Quest}
+	local quests: {[string]: Quest} = {}
+
+	for questId: string in self._UnavailableQuests[player] do
+		quests[questId] = self:GetStaticQuest(questId)
+	end
+
+	return quests
 end
 
 --[=[
@@ -385,6 +440,10 @@ function RoQuest:CanGiveQuest(player: Player, questId: string): boolean
 		return false
 	end
 
+	if not self._StaticAvailableQuests[questId] then
+		return false
+	end
+
 	for _, requiredQuestId: string in quest.RequiredQuests do
 		if not self._PlayerQuestData[player].Delivered[requiredQuestId] then
 			return false
@@ -475,6 +534,10 @@ function RoQuest:_QuestBecameUnavailable(questId: string)
 	end
 
 	self._StaticAvailableQuests[questId] = nil
+
+	for player: Player in self._Quests do
+		self:_NewPlayerAvailableQuest(player, questId)
+	end
 end
 
 function RoQuest:_GiveQuest(player: Player, questId: string, questProgress: QuestProgress?): boolean
@@ -571,16 +634,21 @@ function RoQuest:_NewPlayerAvailableQuest(player: Player, questId: string)
 
 	if not self:CanGiveQuest(player, questId) then
 		if not self:GetQuest(player, questId) then
-			self._UnavailableQuests[player][questId] = true
+			if not self._UnavailableQuests[player][questId] then
+				self._UnavailableQuests[player][questId] = true
+				self.OnQuestUnavailable:Fire(player, questId)
+			end
 		end
 		return
 	end
 
-	self._UnavailableQuests[player][questId] = nil
+	if self._UnavailableQuests[player][questId] then
+		self._UnavailableQuests[player][questId] = nil
+	end
 
 	if quest.QuestAcceptType == QuestAcceptType.Automatic then
 		self:GiveQuest(player, questId)
-	else
+	elseif not self._AvailableQuests[player][questId] then
 		self._AvailableQuests[player][questId] = true
 		self.OnQuestAvailable:Fire(player, questId)
 	end

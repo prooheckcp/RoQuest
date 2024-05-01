@@ -16,4 +16,8 @@ RoQuest.OnStart():andThen(function()
     RoQuest.OnQuestUnavailable:Connect(function(player: Player, questId: string)
         print("Quest Unavailable: ", player, questId)
     end)
+
+    RoQuest.OnQuestDelivered:Connect(function(player: Player, questId: string)
+        print("Available Quest: ", RoQuest:GetAvailableQuests(player))
+    end)
 end)
