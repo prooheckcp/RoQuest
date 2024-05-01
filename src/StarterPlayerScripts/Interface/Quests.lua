@@ -88,23 +88,7 @@ function Quests:UpdateInterface()
 end
 
 function Quests:Init()
-    RoQuest.OnPlayerDataChanged:Connect(function()
-        self:UpdateInterface()
-    end)
-    
-    RoQuest.OnQuestStarted:Connect(function()
-        self:UpdateInterface()
-    end)
-
-    RoQuest.OnQuestCompleted:Connect(function()
-        self:UpdateInterface()
-    end)
-    
-    RoQuest.OnQuestDelivered:Connect(function()
-        self:UpdateInterface()
-    end)
-
-    RoQuest.OnQuestCancelled:Connect(function()
+    RoQuest.OnInProgressQuestChanged:Connect(function()
         self:UpdateInterface()
     end)
 

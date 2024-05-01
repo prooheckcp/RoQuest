@@ -44,7 +44,8 @@ type Quest = { -- Fake quest type for autocomplete candy
 
 --[=[
 	@class QuestLifeCycle
-
+	@tag Class
+	
 	QuestLifeCycles are classes that are used to give behavior to our quests. They get associated to a quest when it gets declared
 	and will allow the developer to update world instances and other things when the quest is available, started, completed or delivered
 
