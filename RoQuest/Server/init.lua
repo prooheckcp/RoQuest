@@ -158,12 +158,23 @@ function RoQuest:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 	end)
 
 	net:On("GetQuests", function(player: Player)
-		while not self._PlayerQuestData[player] and player.Parent == Players do -- Wait for player to load
-			task.wait()
-		end
+		self:_WaitForPlayerToLoad(player)
 
 		return RoQuest._StaticNetworkParse
 	end)
+
+	net:On("GetAvailableQuests", function(player: Player)
+		self:_WaitForPlayerToLoad(player)
+
+		return RoQuest._AvailableQuests[player]
+	end)
+
+	net:On("GetUnAvailableQuests", function(player: Player)
+		self:_WaitForPlayerToLoad(player)
+
+		return RoQuest._UnavailableQuests[player]
+	end)
+
 
 	Players.PlayerAdded:Connect(function(player: Player)
 		self:_PlayerAdded(player)
@@ -509,6 +520,21 @@ function RoQuest:_LoadDirectory(instancesToFilter: {Instance}): {Quest | QuestLi
 	end
 
 	return array
+end
+
+--[=[
+	Yields until the player finishes loading
+
+	@private
+	@yield
+	@param player Player
+
+	@return ()
+]=]
+function RoQuest:_WaitForPlayerToLoad(player: Player): ()
+	while not self._PlayerQuestData[player] and player.Parent == Players do -- Wait for player to load
+		task.wait()
+	end
 end
 
 --[=[

@@ -130,7 +130,7 @@ function QuestLog:Init()
         self:PopulateScreen(self.screens["Completed"], RoQuest:GetCompletedQuests())
     end)
     
-    RoQuest.OnUnDeliveredQuestChanged:Connect(function()
+    RoQuest.OnDeliveredQuestChanged:Connect(function()
         self:PopulateScreen(self.screens["Delivered"], RoQuest:GetDeliveredQuests())
     end)
 

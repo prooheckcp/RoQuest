@@ -22,18 +22,24 @@ export type QuestLifeCycle = QuestLifeCycle.QuestLifeCycle
 export type PlayerQuestData = PlayerQuestData.PlayerQuestData
 export type QuestProgress = QuestProgress.QuestProgress
 
+local STATUS_CHANGED_REFERENCE: {[QuestStatus]: string} = {
+	[QuestStatus.InProgress] = "_ChangeInProgressQuest",
+	[QuestStatus.Completed] = "_ChangeCompletedQuest",
+	[QuestStatus.Delivered] = "_ChangeDeliveredQuest",
+}
+
 local RoQuest = {}
 RoQuest.OnPlayerDataChanged = Signal.new()
 RoQuest.OnQuestObjectiveChanged = Signal.new()
-RoQuest.OnQuestStarted = Signal.new()
-RoQuest.OnQuestCompleted = Signal.new()
-RoQuest.OnQuestDelivered = Signal.new()
-RoQuest.OnQuestCancelled = Signal.new()
-RoQuest.OnQuestAvailable = Signal.new()
+RoQuest.OnQuestStarted = Signal.new() -- Event(questId: string)
+RoQuest.OnQuestCompleted = Signal.new() -- Event(questId: string)
+RoQuest.OnQuestDelivered = Signal.new() -- Event(questId: string)
+RoQuest.OnQuestCancelled = Signal.new() -- Event(questId: string)
+RoQuest.OnQuestAvailable = Signal.new() -- Event(questId: string)
 RoQuest.OnUnAvailableQuestChanged = Signal.new()
 RoQuest.OnAvailableQuestChanged = Signal.new()
 RoQuest.OnCompletedQuestChanged = Signal.new()
-RoQuest.OnUnDeliveredQuestChanged = Signal.new()
+RoQuest.OnDeliveredQuestChanged = Signal.new()
 RoQuest.OnInProgressQuestChanged = Signal.new()
 RoQuest.Quest = Quest
 RoQuest.QuestLifeCycle = QuestLifeCycle
@@ -78,7 +84,17 @@ function RoQuest:Init(lifeCycles: {QuestLifeCycle}?): ()
 
 	-- Need to change the way quests are loaded to allow for dynamic loading
 	local quests: {[string]: any} = net:Call("GetQuests"):Await()
+	local availableQuests: {[string]: true} = net:Call("GetAvailableQuests"):Await()
+	local unavailableQuests: {[string]: true} = net:Call("GetUnAvailableQuests"):Await()
 	self:_LoadQuests(quests)
+
+	for questId: string in availableQuests do
+		self:_ChangeAvailableState(questId, true)
+	end
+
+	for questId: string in unavailableQuests do
+		self:_ChangeUnAvailableState(questId, true)
+	end
 
 	net:On("OnPlayerDataChanged", function(playerQuestData: PlayerQuestData)
 		self:_OnPlayerDataChanged(playerQuestData)
@@ -297,18 +313,72 @@ function RoQuest:_OnQuestCancelled(questId: string): ()
 
 	quest.OnQuestCanceled:Fire()
 	self._Quests[questId] = nil
-	self._PlayerQuestData[quest:GetQuestStatus()][questId] = nil
+	if STATUS_CHANGED_REFERENCE[quest:GetQuestStatus()] then
+		self[STATUS_CHANGED_REFERENCE[quest:GetQuestStatus()]](self, questId, nil)
+	end
 	quest:Destroy()
 	self.OnQuestCancelled:Fire(questId)
 end
 
 function RoQuest:_OnQuestAvailable(questId: string)
-	self._AvailableQuests[questId] = true
+	self:_ChangeAvailableState(questId, true)
+	self:_ChangeUnAvailableState(questId, nil)
 end
 
 function RoQuest:_OnQuestUnavailable(questId: string)
-	self._UnavailableQuests[questId] = true
+	self:_ChangeAvailableState(questId, nil)
+	self:_ChangeUnAvailableState(questId, true)
 end
+
+function RoQuest:_ChangeAvailableState(questId: string, state: true?): ()
+	if self._AvailableQuests[questId] == state then
+		return
+	end
+
+	if state then
+		self.OnQuestAvailable:Fire(questId)
+	end
+
+	self._AvailableQuests[questId] = state
+	self.OnAvailableQuestChanged:Fire(questId, state)
+end
+
+function RoQuest:_ChangeUnAvailableState(questId: string, state: true?): ()
+	if self._UnavailableQuests[questId] == state then
+		return
+	end
+
+	self._UnavailableQuests[questId] = state
+	self.OnUnAvailableQuestChanged:Fire(questId, state)
+end
+
+function RoQuest:_ChangeCompletedQuest(questId: string, questProgress: QuestProgress?): ()
+	if self._PlayerQuestData.Completed[questId] == questProgress then
+		return
+	end
+
+	self._PlayerQuestData.Completed[questId] = questProgress
+	self.OnCompletedQuestChanged:Fire(questId)
+end
+
+function RoQuest:_ChangeDeliveredQuest(questId: string, questProgress: QuestProgress?): ()
+	if self._PlayerQuestData.Delivered[questId] == questProgress then
+		return
+	end
+
+	self._PlayerQuestData.Delivered[questId] = questProgress
+	self.OnDeliveredQuestChanged:Fire(questId)
+end
+
+function RoQuest:_ChangeInProgressQuest(questId: string, questProgress: QuestProgress?): ()
+	if self._PlayerQuestData.InProgress[questId] == questProgress then
+		return
+	end
+
+	self._PlayerQuestData.InProgress[questId] = questProgress
+	self.OnInProgressQuestChanged:Fire(questId)
+end
+
 
 function RoQuest:_GiveQuest(questId: string, questProgress: QuestProgress?): boolean
 	if self:GetQuest(questId) then
@@ -353,9 +423,10 @@ function RoQuest:_GiveQuest(questId: string, questProgress: QuestProgress?): boo
 		})
 	end
 
-	self._AvailableQuests[questId] = nil
+	self:_ChangeAvailableState(questId, nil)
+	self:_ChangeUnAvailableState(questId, nil)
 	self._Quests[questId] = questClone
-	self._PlayerQuestData.InProgress[questId] = questClone:_GetQuestProgress()
+	self:_ChangeInProgressQuest(questId, questClone:_GetQuestProgress())
 
 	return true
 end
@@ -367,8 +438,8 @@ function RoQuest:_QuestCompleted(questId: string): ()
 		return
 	end
 
-	self._PlayerQuestData.InProgress[questId] = nil
-	self._PlayerQuestData.Completed[questId] = quest:_GetQuestProgress()
+	self:_ChangeInProgressQuest(questId, nil)
+	self:_ChangeCompletedQuest(questId, quest:_GetQuestProgress())
 end
 
 function RoQuest:_QuestDelivered(questId: string): ()
@@ -378,8 +449,8 @@ function RoQuest:_QuestDelivered(questId: string): ()
 		return
 	end
 
-	self._PlayerQuestData.Completed[questId] = nil
-	self._PlayerQuestData.Delivered[questId] = quest:_GetQuestProgress()
+	self:_ChangeCompletedQuest(questId, nil)
+	self:_ChangeDeliveredQuest(questId, quest:_GetQuestProgress())
 end
 
 --[=[
