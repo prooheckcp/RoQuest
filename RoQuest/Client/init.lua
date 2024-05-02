@@ -41,7 +41,7 @@ local STATUS_CHANGED_REFERENCE: {[QuestStatus]: string} = {
 	
 	This is the main Module for the RoQuest Client-side. 
 	This is the module developers have access to and can use
-	to interact with the libraries API from the client-side.
+	to interact with the libraries' API from the client-side.
 
 	This module gives access to the developer to properly update his quest logs and/or play
 	animations and modify client-sided behavior of our quests! 
@@ -181,7 +181,7 @@ RoQuestClient.OnQuestCancelled = Signal.new() -- Event(questId: string)
 
 	local RoQuest = require(ReplicatedStorage.RoQuest).Client
 
-	RoQuest.OnQuestCancelled:Connect(function(questId: string)
+	RoQuest.OnQuestAvailable:Connect(function(questId: string)
 		print("The following quest just became available: ", RoQuest:GetQuest(questId).Name)
 	end)
 	```

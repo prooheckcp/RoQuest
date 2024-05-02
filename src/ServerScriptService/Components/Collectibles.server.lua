@@ -3,7 +3,7 @@ local CollectionService = game:GetService("CollectionService")
 
 local RoQuest = require(ReplicatedStorage.RoQuest).Server
 
-local TAGS: {string} = {"Flower", "Apple"}
+local TAGS: {string} = {"Flower", "Apple", "Marble"}
 local RESPAWN_DELAY: number = 5
 
 local function collectibleAdded(instance: Instance, tag: string)
