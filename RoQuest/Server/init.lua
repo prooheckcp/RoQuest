@@ -1462,6 +1462,10 @@ function RoQuestServer:_LoadQuests(quests: {Quest}): ()
 			continue
 		end
 
+		if quest.Disabled then
+			continue
+		end
+
 		if self._StaticQuests[quest.QuestId] then
 			error(string.format(WarningMessages.DuplicateQuestId, quest.QuestId))
 		end

@@ -127,6 +127,14 @@ Quest.Name = "" :: string
 ]=]
 Quest.Description = "" :: string
 --[=[
+    If the quest is disabled or not. If the quest is disabled it will
+    be ignored when loaded into the system
+
+    @prop Disabled boolean
+    @within Quest
+]=]
+Quest.Disabled = false :: boolean
+--[=[
     The quest ID. This must be a unique identifier for the quest
     
     @prop Name string
