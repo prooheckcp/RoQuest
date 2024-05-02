@@ -436,7 +436,7 @@ function Quest:Complete(): boolean
     questProgress.LastCompletedTick = os.time()
     questProgress.QuestStatus = QuestStatus.Completed
 
-    if questProgress.FirstCompletedTick == nil then
+    if questProgress.FirstCompletedTick < 0 then
         questProgress.FirstCompletedTick = questProgress.LastCompletedTick
     end
 

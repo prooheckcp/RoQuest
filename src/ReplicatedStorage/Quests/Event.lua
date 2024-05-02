@@ -7,6 +7,7 @@ local Quest = RoQuest.Quest
 
 return Quest {
     Name = "Collect Flowers", -- The name of our quest
+    Disabled = true,
     Description = "Collect 3 flowers", -- The description that we will display to our user
     QuestId = "FlowerEvent", -- A unique identifier to our quest
     QuestAcceptType = RoQuest.QuestAcceptType.Automatic, -- If the quest automatically gets accepted or rquires manual work

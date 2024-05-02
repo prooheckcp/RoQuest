@@ -51,7 +51,7 @@ function Quests:UpdateQuestFrame(quest: Quest, frame: Frame)
 end
 
 function Quests:UpdateInterface()
-    local quests: {[string]: Quest} = RoQuest:GetQuests()
+    local quests: {[string]: Quest} = RoQuest:GetInProgressQuests()
 
     for _, instance: Instance in scrollingFrame:GetChildren() do -- Delete quests that dont exit
         if instance:IsA("Frame") and not quests[instance.Name] then
@@ -89,6 +89,7 @@ end
 
 function Quests:Init()
     RoQuest.OnInProgressQuestChanged:Connect(function()
+        print("Progress changed!", RoQuest:GetQuests())
         self:UpdateInterface()
     end)
 
