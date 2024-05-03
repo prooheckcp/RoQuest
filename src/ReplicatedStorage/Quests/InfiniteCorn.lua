@@ -11,7 +11,7 @@ return Quest {
     QuestId = "InfiniteCorn", -- A unique identifier to our quest
     QuestAcceptType = RoQuest.QuestAcceptType.Manual, -- If the quest automatically gets accepted or rquires manual work
     QuestDeliverType = RoQuest.QuestDeliverType.Automatic, -- If the quest automatically gets delivered or requires manual work
-    QuestRepeatableType = RoQuest.QuestRepeatableType.Infinite, -- If the quest can be repeated or not
+    QuestRepeatableType = RoQuest.QuestRepeatableType.Daily, -- If the quest can be repeated or not
     QuestStart = -1, -- UTC time to define when the quest should become available (specially useful for event quests)
     QuestEnd = -1, -- UTC time to define when the quest should no longer be available (specially useful for event quests)
     RequiredQuests = {}, -- A list of quests that are required to be delivered before this quest can be started

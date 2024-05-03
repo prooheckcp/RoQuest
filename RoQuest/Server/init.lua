@@ -2,6 +2,7 @@
 local Players = game:GetService("Players")
 
 local Signal = require(script.Parent.Vendor.Signal)
+local Trove = require(script.Parent.Vendor.Trove)
 local Red = require(script.Parent.Vendor.Red)
 local WarningMessages = require(script.Parent.Shared.Data.WarningMessages)
 local warn = require(script.Parent.Shared.Functions.warn)
@@ -31,6 +32,7 @@ export type Quest = Quest.Quest
 export type QuestLifeCycle = QuestLifeCycle.QuestLifeCycle
 export type PlayerQuestData = PlayerQuestData.PlayerQuestData
 export type QuestProgress = QuestProgress.QuestProgress
+type Trove = Trove.Trove
 
 -- We want to give enough time for developers to get and save their player data
 local DATA_RELEASE_DELAY: number = 5
@@ -371,6 +373,15 @@ RoQuestServer._AvailableQuests = {} :: {[Player]: {[string]: true}}
 	@within RoQuestServer
 ]=]
 RoQuestServer._UnavailableQuests = {} :: {[Player]: {[string]: true}}
+--[=[
+	Caches troves of all the players that will get cleared up when the player leaves the game
+
+	@server
+	@private
+	@prop _Troves {[Player]: Trove}
+	@within RoQuestServer
+]=]
+RoQuestServer._Troves = {} :: {[Player]: Trove}
 
 --[=[
 	This is one of the most important methods of this Module. It is used
@@ -1222,13 +1233,12 @@ end
 function RoQuestServer:MakeQuestAvailable(player: Player, questId: string): ()
 	local quest: Quest? = self:GetQuest(player, questId)
 
-	if not quest then
+	if not quest or quest:GetQuestStatus() ~= QuestStatus.Delivered then
 		return
 	end
 
 	local timeRequirement: number = TimeRequirement[quest.QuestRepeatableType]
-	
-	print("[test] Time requirement: ", timeRequirement, quest:GetTimeSinceCompleted())
+
 	if timeRequirement > quest:GetTimeSinceCompleted() then
 		return
 	end
@@ -1286,6 +1296,9 @@ function RoQuestServer:_QuestDelivered(player: Player, questId: string): ()
 
 	if quest.QuestRepeatableType == QuestRepeatableType.Infinite then
 		self:MakeQuestAvailable(player, questId)
+	elseif quest.QuestRepeatableType ~= QuestRepeatableType.Custom then
+		local timeForAvailable: number = TimeRequirement[quest.QuestRepeatableType]
+		self._Troves[player]:Add(task.delay(timeForAvailable - quest:GetTimeSinceCompleted(), self.MakeQuestAvailable, self, player, questId))
 	end
 
 	self:_NewPlayerAvailableQuest(player, questId)
@@ -1469,6 +1482,7 @@ end
 ]=]
 function RoQuestServer:_LoadPlayerData(player: Player): ()
 	self._Quests[player] = {} -- Reset our player quest
+	self._Troves[player]:Clean()
 
 	for _questStatus, questArray: {[string]: QuestProgress} in self:GetPlayerData(player) do
 		for questId: string, questProgress: QuestProgress in questArray do
@@ -1478,6 +1492,14 @@ function RoQuestServer:_LoadPlayerData(player: Player): ()
 
 	for questId: string in self._StaticAvailableQuests do
 		self:_NewPlayerAvailableQuest(player, questId)
+	end
+
+	for _, quest: Quest in self:GetDeliveredQuests(player) do
+		if quest.QuestRepeatableType ~= QuestRepeatableType.NonRepeatable then
+			local timeForAvailable: number = TimeRequirement[quest.QuestRepeatableType]
+			
+			self._Troves[player]:Add(task.delay(timeForAvailable - quest:GetTimeSinceCompleted(), self.MakeQuestAvailable, self, player, quest.QuestId))
+		end
 	end
 
 	self.OnPlayerDataChanged:Fire(player, self:GetPlayerData(player))
@@ -1621,6 +1643,7 @@ function RoQuestServer:_PlayerAdded(player: Player): ()
 	self._Quests[player] = {}
 	self._AvailableQuests[player] = {}
 	self._UnavailableQuests[player] = {}
+	self._Troves[player] = Trove.new()
 	self._PlayerQuestData[player] = PlayerQuestData {}
 
 	self:_LoadPlayerData(player)
@@ -1636,10 +1659,13 @@ end
 	@return ()
 ]=]
 function RoQuestServer:_PlayerRemoving(player: Player): ()
+	self._Troves[player]:Destroy()
+
 	self._Quests[player] = nil
 	self._AvailableQuests[player] = nil
 	self._UnavailableQuests[player] = nil
 	self._PlayerQuestData[player] = nil
+	self._Troves[player] = nil
 end
 
 return RoQuestServer
