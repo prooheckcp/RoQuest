@@ -18,6 +18,7 @@ local QuestAcceptType = require(script.Parent.Shared.Enums.QuestAcceptType)
 local PlayerQuestData = require(script.Parent.Shared.Structs.PlayerQuestData)
 local networkQuestParser = require(script.Parent.Shared.Functions.networkQuestParser)
 local Promise = require(script.Parent.Vendor.Promise)
+local TimeRequirement = require(script.Parent.Shared.Data.TimeRequirement)
 
 export type QuestObjective = QuestObjective.QuestObjective
 export type QuestObjectiveProgress = QuestObjectiveProgress.QuestObjectiveProgress
@@ -202,6 +203,14 @@ RoQuestServer.OnQuestAvailable = Signal.new()
 	@within RoQuestServer
 ]=]
 RoQuestServer.OnQuestUnavailable = Signal.new() -- Event (player: Player, questId: string)
+--[=[
+	This is a reference to our PlayerQuestData struct
+
+	@server
+	@prop PlayerQuestData PlayerQuestData
+	@within RoQuestServer
+]=]
+RoQuestServer.PlayerQuestData = PlayerQuestData
 --[=[
 	This is a reference to our Quest class
 
@@ -454,7 +463,7 @@ function RoQuestServer:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 	end)
 
 	self.OnQuestStarted:Connect(function(player: Player, questId: string)
-		net:Fire(player, "OnQuestStarted", questId)
+		net:Fire(player, "OnQuestStarted", questId, self:GetQuest(player, questId):_GetQuestProgress())
 	end)
 
 	self.OnQuestCompleted:Connect(function(player: Player, questId: string)
@@ -1172,13 +1181,60 @@ function RoQuestServer:CanGiveQuest(player: Player, questId: string): boolean
 		return false
 	end
 
+	local currentQuest: Quest? = self:GetQuest(player, questId)
 	for _, requiredQuestId: string in quest.RequiredQuests do
 		if not self._PlayerQuestData[player].Delivered[requiredQuestId] then
 			return false
 		end
+
+		local requiredQuest: Quest? = self:GetQuest(player, requiredQuestId)
+
+		if 
+			currentQuest and 
+			requiredQuest and
+			requiredQuest.QuestRepeatableType ~= QuestRepeatableType.NonRepeatable and
+			requiredQuest:GetCompleteCount() <= currentQuest:GetCompleteCount() 
+		then
+			return false
+		end
 	end
 
-	return self:GetQuest(player, questId) == nil
+	if currentQuest == nil then
+		return true
+	end
+
+	return currentQuest:GetQuestStatus() == QuestStatus.Delivered and currentQuest._CanRepeatQuest
+end
+
+--[=[
+	:::warning
+
+	This can only be called if the quest repeatable type is set to Custom
+
+	:::
+
+	@server
+	@param player Player
+	@param questId string
+
+	@return ()
+]=]
+function RoQuestServer:MakeQuestAvailable(player: Player, questId: string): ()
+	local quest: Quest? = self:GetQuest(player, questId)
+
+	if not quest then
+		return
+	end
+
+	local timeRequirement: number = TimeRequirement[quest.QuestRepeatableType]
+	
+	print("[test] Time requirement: ", timeRequirement, quest:GetTimeSinceCompleted())
+	if timeRequirement > quest:GetTimeSinceCompleted() then
+		return
+	end
+
+	quest._CanRepeatQuest = true
+	self:_NewPlayerAvailableQuest(player, questId)
 end
 
 --[=[
@@ -1227,6 +1283,12 @@ function RoQuestServer:_QuestDelivered(player: Player, questId: string): ()
 			self:_NewPlayerAvailableQuest(player, requiredQuestId)
 		end
 	end
+
+	if quest.QuestRepeatableType == QuestRepeatableType.Infinite then
+		self:MakeQuestAvailable(player, questId)
+	end
+
+	self:_NewPlayerAvailableQuest(player, questId)
 end
 
 --[=[
@@ -1332,12 +1394,13 @@ end
 	@return boolean -- If it managed to give the quest to the player or not
 ]=]
 function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress: QuestProgress?): boolean
-	if self:GetQuest(player, questId) then
+	if not self:CanGiveQuest(player, questId) then
 		return false
 	end
 
 	local questProperties = self._StaticNetworkParse[questId]
 	local questClone: Quest = Quest.new(table.clone(questProperties))
+	questClone._CanRepeatQuest = false
 
 	questClone.OnQuestCompleted:Connect(function()
 		self.OnQuestCompleted:Fire(player, questId)
@@ -1359,12 +1422,23 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 		questObjectiveProgresses[questObjective.ObjectiveInfo.ObjectiveId] = table.clone(questObjective._QuestObjectiveProgress)
 	end
 
+	if not questProgress then
+		local quest: Quest? = self:GetQuest(player, questId)
+
+		if quest then -- We are repeating the quest!!!
+			questProgress = quest:_GetQuestProgress()
+			questProgress.QuestObjectiveProgresses = questObjectiveProgresses
+		end
+	end
+
 	if questProgress then
 		for objectiveId: string, questObjectiveProgress: QuestObjectiveProgress in questObjectiveProgresses do
 			if not questProgress.QuestObjectiveProgresses[objectiveId] then
 				questProgress.QuestObjectiveProgresses[objectiveId] = questObjectiveProgress
 			end
 		end
+
+		questProgress.QuestStatus = QuestStatus.InProgress
 		questClone:_SetQuestProgress(questProgress)
 	else
 		questClone:_SetQuestProgress(QuestProgress {
@@ -1379,6 +1453,7 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 	self._AvailableQuests[player][questId] = nil
 	self._Quests[player][questId] = questClone
 	self._PlayerQuestData[player].InProgress[questId] = questClone:_GetQuestProgress()
+	self._PlayerQuestData[player].Delivered[questId] = nil
 
 	return true
 end

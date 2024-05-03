@@ -198,6 +198,15 @@ Quest.LifeCycles = {} :: {string}
 ]=]
 Quest.QuestObjectives = {} :: {QuestObjective}
 --[=[
+    This is a boolean that determines whether the player can repeat this
+    quest after it has been completed or not
+
+    @private
+    @prop _CanRepeatQuest boolean
+    @within Quest
+]=]
+Quest._CanRepeatQuest = false :: boolean
+--[=[
     A hash map that stores and tracks all the quest objectives that are currently active in the quest
 
     @private
@@ -366,6 +375,15 @@ function Quest:SetObjective(objectiveId: string, newAmount: number): ()
     if questObjective:Set(newAmount) then
         self.OnQuestObjectiveChanged:Fire(objectiveId, self:GetObjective(objectiveId))
     end
+end
+
+--[=[
+    Gets the time since the quest was completed
+
+    @return number
+]=]
+function Quest:GetTimeSinceCompleted(): number
+    return os.time() - self:GetLastCompletedTick()
 end
 
 --[=[

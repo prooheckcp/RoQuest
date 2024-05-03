@@ -505,8 +505,8 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 		self:_OnQuestObjectiveChanged(questId, objectiveId, newAmount)
 	end)
 
-	net:On("OnQuestStarted", function(questId: string)
-		self:_OnQuestStarted(questId)
+	net:On("OnQuestStarted", function(questId: string, questProgress: QuestProgress?)
+		self:_OnQuestStarted(questId, questProgress)
 	end)
 
 	net:On("OnQuestCompleted", function(questId: string)
@@ -917,8 +917,8 @@ end
 
 	@return ()
 ]=]
-function RoQuestClient:_OnQuestStarted(questId: string): ()
-	self:_GiveQuest(questId)
+function RoQuestClient:_OnQuestStarted(questId: string, questProgress: QuestProgress?): ()
+	self:_GiveQuest(questId, questProgress)
 	self.OnQuestStarted:Fire(questId)
 end
 
@@ -1134,7 +1134,8 @@ end
 	@return boolean -- If it managed to give the quest to the player or not
 ]=]
 function RoQuestClient:_GiveQuest(questId: string, questProgress: QuestProgress?): boolean
-	if self:GetQuest(questId) then
+	-- We also check if the quest is available because of repeatable quests
+	if self:GetQuest(questId) and not self:CanGiveQuest(questId) then
 		return false
 	end
 
@@ -1178,6 +1179,8 @@ function RoQuestClient:_GiveQuest(questId: string, questProgress: QuestProgress?
 
 	self:_ChangeAvailableState(questId, nil)
 	self:_ChangeUnAvailableState(questId, nil)
+	self:_ChangeDeliveredQuest(questId, nil)
+	
 	self._Quests[questId] = questClone
 	self:_ChangeInProgressQuest(questId, questClone:_GetQuestProgress())
 

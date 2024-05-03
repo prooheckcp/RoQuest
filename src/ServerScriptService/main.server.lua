@@ -7,7 +7,9 @@ RoQuest:Init(RoQuest:LoadDirectory(ReplicatedStorage.Quests))
 RoQuest.OnStart():andThen(function()
     RoQuest.OnQuestStarted:Connect(function(player: Player, questId: string)
         print("Quest Started:", player, questId)
-    end)
+    end)    
+    --[[
+
 
     RoQuest.OnQuestAvailable:Connect(function(player: Player, questId: string)
         print("Quest Available: ", player, questId)
@@ -19,5 +21,7 @@ RoQuest.OnStart():andThen(function()
 
     RoQuest.OnQuestDelivered:Connect(function(player: Player, questId: string)
         print("Available Quest: ", RoQuest:GetAvailableQuests(player))
-    end)
+    end)        
+    ]]
+
 end)
