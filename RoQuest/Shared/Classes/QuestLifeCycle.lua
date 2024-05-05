@@ -122,7 +122,7 @@ QuestLifeCycle.Quest = newproxy() :: Quest
 
 	@return Quest
 ]=]
-function QuestLifeCycle.new(properties: {[string]: any})
+function QuestLifeCycle.new(properties: {[string]: any}): QuestLifeCycle
 	return assertProperties(properties, QuestLifeCycle)
 end
 
