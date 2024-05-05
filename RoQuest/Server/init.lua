@@ -1248,6 +1248,25 @@ function RoQuestServer:MakeQuestAvailable(player: Player, questId: string): ()
 end
 
 --[=[
+	Get the quest status
+
+	@server
+	@param player Player
+	@param questId string
+
+	@return QuestStatus
+]=]
+function RoQuestServer:GetQuestStatus(player: Player, questId: string): QuestStatus
+	local quest: Quest? = self:GetQuest(player, questId)
+
+	if not quest then
+		return QuestStatus.NotStarted
+	end
+
+	return quest:GetQuestStatus()
+end
+
+--[=[
 	Called when a quest gets completed. Updates the cache about the quest status
 
 	@private

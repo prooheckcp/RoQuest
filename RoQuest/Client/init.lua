@@ -836,6 +836,24 @@ function RoQuestClient:CanGiveQuest(questId: string): boolean
 end
 
 --[=[
+	Get the quest status
+
+	@client
+	@param questId string
+
+	@return QuestStatus
+]=]
+function RoQuestClient:GetQuestStatus(questId: string): QuestStatus
+	local quest: Quest? = self:GetQuest(questId)
+
+	if not quest then
+		return QuestStatus.NotStarted
+	end
+
+	return quest:GetQuestStatus()
+end
+
+--[=[
 	Used to update all the static quests that are cached in our quest system
 
 	@client

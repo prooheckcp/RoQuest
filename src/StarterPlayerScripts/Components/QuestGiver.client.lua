@@ -4,8 +4,16 @@ local CollectionService = game:GetService("CollectionService")
 local RoQuest = require(ReplicatedStorage.RoQuest).Client
 local Hud = require(script.Parent.Parent.Interface.Hud)
 local Prompt = require(script.Parent.Parent.Interface.Prompt)
+local QuestStatus = RoQuest.QuestStatus
+
+type Quest = RoQuest.Quest
 
 local TAG: string = "QuestGiver"
+local ICONS = {
+    [QuestStatus.Completed] = "?",
+    [QuestStatus.Delivered] = "",
+    [QuestStatus.InProgress] = "..."
+}
 
 local function questGiverAdded(instance: Instance)
     local questId: string = instance:GetAttribute("QuestId")
@@ -15,6 +23,8 @@ local function questGiverAdded(instance: Instance)
     highlight.FillTransparency = 0.85
     highlight.Adornee = instance
     highlight.Enabled = false
+
+    local iconTest: TextLabel = instance:WaitForChild("HumanoidRootPart"):WaitForChild("Quest"):WaitForChild("Text")
 
     clickDetector.MouseHoverEnter:Connect(function()
         highlight.Enabled = true
@@ -33,6 +43,29 @@ local function questGiverAdded(instance: Instance)
         Hud:EnableScreen("QuestPrompt")
     end)
 
+    local function questStatusChanged(_questId: string)
+        if _questId ~= questId then
+            return
+        end
+
+        local quest: Quest? = RoQuest:GetQuest(questId)
+        local displayIcon: string = ""
+
+        if quest then
+            displayIcon = ICONS[quest:GetQuestStatus()]
+        elseif RoQuest:CanGiveQuest(questId) then
+            displayIcon = "!"
+        end
+
+        iconTest.Text = displayIcon
+    end
+
+    RoQuest.OnQuestCompleted:Connect(questStatusChanged)
+    RoQuest.OnQuestStarted:Connect(questStatusChanged)
+    RoQuest.OnQuestDelivered:Connect(questStatusChanged)
+    RoQuest.OnQuestAvailable:Connect(questStatusChanged)
+    questStatusChanged(questId)
+
     clickDetector.Parent = instance
     highlight.Parent = instance
 end
@@ -44,5 +77,5 @@ RoQuest.OnStart():andThen(function()
 
     CollectionService:GetInstanceAddedSignal(TAG):Connect(function(instance: Instance)
         questGiverAdded(instance)
-    end)    
+    end)
 end)
