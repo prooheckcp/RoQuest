@@ -127,17 +127,35 @@ function QuestLifeCycle.new(properties: {[string]: any})
 end
 
 --[=[
-	Called as soon as the quest becomes available for the player
+	Called when the player starts the quest
 
-	:::info
+	:::warning
 
-	This is a virtual method. Meaning you can override it in your lifecycle
+	This method only gets called on the first time the player starts a quest with this LifeCycle.
+	This means if there are 2 quests with the same lifecycle and the player already started one of them
+	then this method won't get called
 
 	:::
 
 	@return ()
 ]=]
-function QuestLifeCycle:OnAvailable(): ()
+function QuestLifeCycle:FirstStart(): ()
+	
+end
+
+--[=[
+	Called when the player completes the quest
+	:::warning
+
+	This method only gets called when the player completed **ALL** quests that contain this lifecyle.
+	This means if the player has 2 quests with the same lifeycle in progress, only after he completes both of them
+	then will this method be called
+
+	:::
+
+	@return ()
+]=]
+function QuestLifeCycle:AllComplete(): ()
 	
 end
 
@@ -152,7 +170,7 @@ end
 
 	@return ()
 ]=]
-function QuestLifeCycle:OnStarted(): ()
+function QuestLifeCycle:OnStart(): ()
 	
 end
 
@@ -167,7 +185,7 @@ end
 
 	@return ()
 ]=]
-function QuestLifeCycle:OnCompleted(): ()
+function QuestLifeCycle:OnComplete(): ()
 	
 end
 
@@ -183,7 +201,7 @@ end
 
 	@return ()
 ]=]
-function QuestLifeCycle:OnDelivered(): ()
+function QuestLifeCycle:OnDeliver(): ()
 	
 end
 
@@ -201,7 +219,7 @@ end
 
 	@return ()
 ]=]
-function QuestLifeCycle:OnObjectiveChanged(_objectiveId: string, _newAmount: number): ()
+function QuestLifeCycle:OnObjectiveChange(_objectiveId: string, _newAmount: number): ()
 	
 end
 
