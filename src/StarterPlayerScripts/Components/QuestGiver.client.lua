@@ -35,15 +35,22 @@ local function questGiverAdded(instance: Instance)
     end)
 
     clickDetector.MouseClick:Connect(function()
-        if not RoQuest:CanGiveQuest(questId) then
+        if 
+            RoQuest:GetQuestStatus(questId) == QuestStatus.Delivered and 
+            not RoQuest:CanGiveQuest(questId) 
+        then
             return
         end
-        
+
         Prompt:SetQuest(questId)
         Hud:EnableScreen("QuestPrompt")
     end)
 
     local function questStatusChanged(_questId: string)
+        if _questId == "FlowerCollection" then
+            print(questId, RoQuest:CanGiveQuest(questId))    
+        end
+
         if _questId ~= questId then
             return
         end
@@ -51,10 +58,10 @@ local function questGiverAdded(instance: Instance)
         local quest: Quest? = RoQuest:GetQuest(questId)
         local displayIcon: string = ""
 
-        if quest then
-            displayIcon = ICONS[quest:GetQuestStatus()]
-        elseif RoQuest:CanGiveQuest(questId) then
+        if RoQuest:CanGiveQuest(questId) then
             displayIcon = "!"
+        elseif quest then
+            displayIcon = ICONS[quest:GetQuestStatus()]
         end
 
         iconTest.Text = displayIcon

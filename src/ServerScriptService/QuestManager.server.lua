@@ -9,4 +9,8 @@ RoQuest.OnStart():andThen(function()
     Net:On("AcceptQuest", function(player: Player, questId: string)
         RoQuest:GiveQuest(player, questId)
     end)
+
+    Net:On("DeliverQuest", function(player: Player, questId: string)
+        RoQuest:DeliverQuest(player, questId)
+    end)
 end)

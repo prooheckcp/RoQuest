@@ -46,10 +46,11 @@ function Prompt:SetQuest(questId: string)
         newTemplate.Parent = objectivesFrame
     end
 
-    local questStatus: QuestStatus = staticQuest:GetQuestStatus()
+    local questStatus: QuestStatus = RoQuest:GetQuestStatus(questId)
 
-    buttons.Accept.Visible = questStatus == QuestStatus.Available
-    buttons.Deliver.Visible = 
+    buttons.Accept.Visible = RoQuest:CanGiveQuest(questId)
+    buttons.Deliver.Visible = questStatus == QuestStatus.Completed
+
     self._CurrentQuestId = questId
 end
 

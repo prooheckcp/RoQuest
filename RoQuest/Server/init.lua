@@ -1237,6 +1237,10 @@ function RoQuestServer:MakeQuestAvailable(player: Player, questId: string): ()
 		return
 	end
 
+	if quest.QuestRepeatableType == QuestRepeatableType.NonRepeatable then
+		return
+	end
+
 	local timeRequirement: number = TimeRequirement[quest.QuestRepeatableType]
 
 	if timeRequirement > quest:GetTimeSinceCompleted() then

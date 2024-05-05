@@ -832,7 +832,7 @@ end
 	@return boolean -- If we can or not give the quest to the player
 ]=]
 function RoQuestClient:CanGiveQuest(questId: string): boolean
-	return self._AvailableQuests[questId]
+	return self._AvailableQuests[questId] or false
 end
 
 --[=[
@@ -1052,12 +1052,12 @@ function RoQuestClient:_ChangeAvailableState(questId: string, state: true?): ()
 		return
 	end
 
+	self._AvailableQuests[questId] = state
+	self.OnAvailableQuestChanged:Fire(questId, state)
+
 	if state then
 		self.OnQuestAvailable:Fire(questId)
 	end
-
-	self._AvailableQuests[questId] = state
-	self.OnAvailableQuestChanged:Fire(questId, state)
 end
 
 --[=[
