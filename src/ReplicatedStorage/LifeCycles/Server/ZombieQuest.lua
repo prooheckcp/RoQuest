@@ -7,7 +7,7 @@ type QuestLifeCycle = RoQuest.QuestLifeCycle
 local QuestLifeCycle = RoQuest.QuestLifeCycle
 
 local ZombieQuest = QuestLifeCycle {
-    Name = "ZombieQuest",
+    Name = "AppleQuest",
 }
 
 function ZombieQuest:FirstStart()
@@ -24,6 +24,10 @@ end
 
 function ZombieQuest:OnComplete()
     print("Zombie On Complete")
+end
+
+function ZombieQuest:OnObjectiveChange(...)
+    print(...)
 end
 
 function ZombieQuest:OnDeliver()

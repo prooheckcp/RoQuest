@@ -47,10 +47,6 @@ local function questGiverAdded(instance: Instance)
     end)
 
     local function questStatusChanged(_questId: string)
-        if _questId == "FlowerCollection" then
-            print(questId, RoQuest:CanGiveQuest(questId))    
-        end
-
         if _questId ~= questId then
             return
         end

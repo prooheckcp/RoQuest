@@ -20,6 +20,7 @@ local PlayerQuestData = require(script.Parent.Shared.Structs.PlayerQuestData)
 local networkQuestParser = require(script.Parent.Shared.Functions.networkQuestParser)
 local Promise = require(script.Parent.Vendor.Promise)
 local TimeRequirement = require(script.Parent.Shared.Data.TimeRequirement)
+local StatusToLifeCycle = require(script.Parent.Shared.Data.StatusToLifeCycle)
 
 export type QuestObjective = QuestObjective.QuestObjective
 export type QuestObjectiveProgress = QuestObjectiveProgress.QuestObjectiveProgress
@@ -382,6 +383,15 @@ RoQuestServer._UnavailableQuests = {} :: {[Player]: {[string]: true}}
 	@within RoQuestServer
 ]=]
 RoQuestServer._Troves = {} :: {[Player]: Trove}
+--[=[
+	Caches all the lifecycles of the quests that the players are currently engaged with
+
+	@server
+	@private
+	@prop _LifeCycles {[Player]: {[string]: {[string]: QuestLifeCycle}}}
+	@within RoQuestServer
+]=]
+RoQuestServer._LifeCycles = {} :: {[Player]: {[string]: {[string]: QuestLifeCycle}}}
 
 --[=[
 	This is one of the most important methods of this Module. It is used
@@ -1486,10 +1496,15 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 		})
 	end
 
+	for _, lifeCycleName: string in questClone.LifeCycles do
+		self:_CreateLifeCycle(player, questClone, lifeCycleName)
+	end
+
 	self._AvailableQuests[player][questId] = nil
 	self._Quests[player][questId] = questClone
 	self._PlayerQuestData[player].InProgress[questId] = questClone:_GetQuestProgress()
 	self._PlayerQuestData[player].Delivered[questId] = nil
+	self._Troves[player]:Add(questClone)
 
 	return true
 end
@@ -1565,6 +1580,71 @@ function RoQuestServer:_NewPlayerAvailableQuest(player: Player, questId: string)
 		self._AvailableQuests[player][questId] = true
 		self.OnQuestAvailable:Fire(player, questId)
 	end
+end
+
+function RoQuestServer:GetLifeCycle(player: Player, questId: string, lifeCycleName: string): QuestLifeCycle?
+	if not self._LifeCycles[player][lifeCycleName] then
+		return nil
+	end
+
+	return self._LifeCycles[player][lifeCycleName][questId]
+end
+
+
+
+function RoQuestServer:_CreateLifeCycle(player: Player, quest: Quest, lifeCycleName: string): ()
+	local staticLifeCycle: QuestLifeCycle? = self._StaticQuestLifeCycles[lifeCycleName]
+
+	if not staticLifeCycle then
+		return
+	end
+
+	local newLifeCycle: QuestLifeCycle = table.clone(staticLifeCycle)
+	newLifeCycle.Player = player
+	newLifeCycle.Quest = quest
+
+	quest._Trove:Add(quest.OnQuestObjectiveChanged:Connect(function(...)
+		self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, "OnObjectiveChange", ...)
+	end))
+
+	quest._Trove:Add(quest.OnQuestDelivered:Connect(function()
+		self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, StatusToLifeCycle[QuestStatus.Delivered])
+	end))
+
+	quest._Trove:Add(quest.OnQuestCanceled:Connect(function()
+		self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, "OnCancel")
+	end))
+
+	quest._Trove:Add(quest.OnQuestCompleted:Connect(function()
+		self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, StatusToLifeCycle[QuestStatus.Completed])
+	end))
+
+	quest._Trove:Add(newLifeCycle, "OnDestroy")
+
+	if not self._LifeCycles[player][lifeCycleName] then
+		self._LifeCycles[player][lifeCycleName] = {}
+	end
+
+	self._LifeCycles[player][lifeCycleName][quest.QuestId] = newLifeCycle
+
+	if StatusToLifeCycle[quest:GetQuestStatus()] then
+		self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, StatusToLifeCycle[quest:GetQuestStatus()])
+	end
+end
+
+function RoQuestServer:_CallLifeCycle(player: Player, questId: string, lifeCycleName: string, methodName: string, ...: any): ()
+	local questLifeCycle: QuestLifeCycle? = self:GetLifeCycle(player, questId, lifeCycleName)
+
+	if not questLifeCycle then
+		return
+	end
+
+	if not questLifeCycle[methodName] then
+		warn(string.format(WarningMessages.NoLifeCycleMethod, methodName, lifeCycleName))
+		return
+	end
+
+	task.spawn(questLifeCycle[methodName], questLifeCycle, ...)
 end
 
 --[=[
@@ -1666,6 +1746,7 @@ function RoQuestServer:_PlayerAdded(player: Player): ()
 	self._Quests[player] = {}
 	self._AvailableQuests[player] = {}
 	self._UnavailableQuests[player] = {}
+	self._LifeCycles[player] = {}
 	self._Troves[player] = Trove.new()
 	self._PlayerQuestData[player] = PlayerQuestData {}
 
@@ -1684,6 +1765,7 @@ end
 function RoQuestServer:_PlayerRemoving(player: Player): ()
 	self._Troves[player]:Destroy()
 
+	self._LifeCycles[player] = nil
 	self._Quests[player] = nil
 	self._AvailableQuests[player] = nil
 	self._UnavailableQuests[player] = nil

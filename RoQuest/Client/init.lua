@@ -408,6 +408,15 @@ RoQuestClient._UnavailableQuests = {} :: {[string]: true}
 	@within RoQuestClient
 ]=]
 RoQuestClient._PlayerQuestData = nil :: PlayerQuestData
+--[=[
+	Caches all the lifecycles of the quests that the players are currently engaged with
+	
+	@client
+	@private
+	@prop _LifeCycles {[string]: {[string]: QuestLifeCycle}}
+	@within RoQuestClient
+]=]
+RoQuestClient._LifeCycles = {} :: {[string]: {[string]: QuestLifeCycle}}
 
 --[=[
 	This is one of the most important methods of this Module. It is used

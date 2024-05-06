@@ -238,6 +238,14 @@ function QuestLifeCycle:OnDestroy(): ()
 	
 end
 
+function QuestLifeCycle:OnCancel()
+	
+end
+
+function QuestLifeCycle:Destroy()
+	self:OnDestroy()
+end
+
 export type QuestLifeCycle = typeof(QuestLifeCycle)
 
 return setmetatable(QuestLifeCycle, {
