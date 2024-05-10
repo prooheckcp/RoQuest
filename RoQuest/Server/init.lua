@@ -1281,6 +1281,24 @@ function RoQuestServer:GetQuestStatus(player: Player, questId: string): QuestSta
 end
 
 --[=[
+	Gets a lifecycle object from a quest by the name
+
+	@server
+	@param player Player
+	@param questId string
+	@param lifeCycleName string
+
+	@return QuestLifeCycle?
+]=]
+function RoQuestServer:GetLifeCycle(player: Player, questId: string, lifeCycleName: string): QuestLifeCycle?
+	if not self._LifeCycles[player][lifeCycleName] then
+		return nil
+	end
+
+	return self._LifeCycles[player][lifeCycleName][questId]
+end
+
+--[=[
 	Called when a quest gets completed. Updates the cache about the quest status
 
 	@private
@@ -1582,16 +1600,17 @@ function RoQuestServer:_NewPlayerAvailableQuest(player: Player, questId: string)
 	end
 end
 
-function RoQuestServer:GetLifeCycle(player: Player, questId: string, lifeCycleName: string): QuestLifeCycle?
-	if not self._LifeCycles[player][lifeCycleName] then
-		return nil
-	end
+--[=[
+	Creates a new lifecycle object for the given quest
 
-	return self._LifeCycles[player][lifeCycleName][questId]
-end
+	@server
+	@private
+	@param player Player
+	@param quest Quest
+	@param lifeCycleName string
 
-
-
+	@return ()
+]=]
 function RoQuestServer:_CreateLifeCycle(player: Player, quest: Quest, lifeCycleName: string): ()
 	local staticLifeCycle: QuestLifeCycle? = self._StaticQuestLifeCycles[lifeCycleName]
 
@@ -1627,11 +1646,26 @@ function RoQuestServer:_CreateLifeCycle(player: Player, quest: Quest, lifeCycleN
 
 	self._LifeCycles[player][lifeCycleName][quest.QuestId] = newLifeCycle
 
+	self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, "OnInit")
+
 	if StatusToLifeCycle[quest:GetQuestStatus()] then
 		self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, StatusToLifeCycle[quest:GetQuestStatus()])
 	end
 end
 
+--[=[
+	Calls a lifecycle method and runs it at a different thread
+
+	@private
+	@server
+	@param player Player
+	@param questId string
+	@param lifeCycleName string
+	@param methodName string
+	@param ... any
+
+	@return ()
+]=]
 function RoQuestServer:_CallLifeCycle(player: Player, questId: string, lifeCycleName: string, methodName: string, ...: any): ()
 	local questLifeCycle: QuestLifeCycle? = self:GetLifeCycle(player, questId, lifeCycleName)
 

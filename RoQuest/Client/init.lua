@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local Red = require(script.Parent.Vendor.Red).Client
 local Signal = require(script.Parent.Vendor.Signal)
 local QuestLifeCycle = require(script.Parent.Shared.Classes.QuestLifeCycle)
@@ -13,6 +14,7 @@ local QuestDeliverType = require(script.Parent.Shared.Enums.QuestDeliverType)
 local QuestAcceptType = require(script.Parent.Shared.Enums.QuestAcceptType)
 local QuestStatus = require(script.Parent.Shared.Enums.QuestStatus)
 local Promise = require(script.Parent.Vendor.Promise)
+local StatusToLifeCycle = require(script.Parent.Shared.Data.StatusToLifeCycle)
 
 export type QuestStatus = QuestStatus.QuestStatus
 export type QuestObjective = QuestObjective.QuestObjective
@@ -863,6 +865,23 @@ function RoQuestClient:GetQuestStatus(questId: string): QuestStatus
 end
 
 --[=[
+	Gets a lifecycle object from a quest by the name
+
+	@client
+	@param questId string
+	@param lifeCycleName string
+
+	@return QuestLifeCycle?
+]=]
+function RoQuestClient:GetLifeCycle(questId: string, lifeCycleName: string): QuestLifeCycle?
+	if not self._LifeCycles[lifeCycleName] then
+		return nil
+	end
+
+	return self._LifeCycles[lifeCycleName][questId]
+end
+
+--[=[
 	Used to update all the static quests that are cached in our quest system
 
 	@client
@@ -1254,6 +1273,86 @@ function RoQuestClient:_QuestDelivered(questId: string): ()
 
 	self:_ChangeCompletedQuest(questId, nil)
 	self:_ChangeDeliveredQuest(questId, quest:_GetQuestProgress())
+end
+
+--[=[
+	Creates a new lifecycle object for the given quest
+
+	@server
+	@private
+	@param player Player
+	@param quest Quest
+	@param lifeCycleName string
+
+	@return ()
+]=]
+function RoQuestClient:_CreateLifeCycle(quest: Quest, lifeCycleName: string): ()
+	local staticLifeCycle: QuestLifeCycle? = self._StaticQuestLifeCycles[lifeCycleName]
+
+	if not staticLifeCycle then
+		return
+	end
+
+	local newLifeCycle: QuestLifeCycle = table.clone(staticLifeCycle)
+	newLifeCycle.Player = Players.LocalPlayer
+	newLifeCycle.Quest = quest
+
+	quest._Trove:Add(quest.OnQuestObjectiveChanged:Connect(function(...)
+		self:_CallLifeCycle(quest.QuestId, lifeCycleName, "OnObjectiveChange", ...)
+	end))
+
+	quest._Trove:Add(quest.OnQuestDelivered:Connect(function()
+		self:_CallLifeCycle(quest.QuestId, lifeCycleName, StatusToLifeCycle[QuestStatus.Delivered])
+	end))
+
+	quest._Trove:Add(quest.OnQuestCanceled:Connect(function()
+		self:_CallLifeCycle(quest.QuestId, lifeCycleName, "OnCancel")
+	end))
+
+	quest._Trove:Add(quest.OnQuestCompleted:Connect(function()
+		self:_CallLifeCycle(quest.QuestId, lifeCycleName, StatusToLifeCycle[QuestStatus.Completed])
+	end))
+
+	quest._Trove:Add(newLifeCycle, "OnDestroy")
+
+	if not self._LifeCycles[lifeCycleName] then
+		self._LifeCycles[lifeCycleName] = {}
+	end
+
+	self._LifeCycles[lifeCycleName][quest.QuestId] = newLifeCycle
+
+	self:_CallLifeCycle(quest.QuestId, lifeCycleName, "OnInit")
+
+	if StatusToLifeCycle[quest:GetQuestStatus()] then
+		self:_CallLifeCycle(quest.QuestId, lifeCycleName, StatusToLifeCycle[quest:GetQuestStatus()])
+	end
+end
+
+--[=[
+	Calls a lifecycle method and runs it at a different thread
+
+	@private
+	@client
+	@param questId string
+	@param lifeCycleName string
+	@param methodName string
+	@param ... any
+
+	@return ()
+]=]
+function RoQuestClient:_CallLifeCycle(questId: string, lifeCycleName: string, methodName: string, ...: any): ()
+	local questLifeCycle: QuestLifeCycle? = self:GetLifeCycle(questId, lifeCycleName)
+
+	if not questLifeCycle then
+		return
+	end
+
+	if not questLifeCycle[methodName] then
+		warn(string.format(WarningMessages.NoLifeCycleMethod, methodName, lifeCycleName))
+		return
+	end
+
+	task.spawn(questLifeCycle[methodName], questLifeCycle, ...)
 end
 
 --[=[

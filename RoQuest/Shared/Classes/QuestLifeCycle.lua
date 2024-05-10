@@ -127,35 +127,19 @@ function QuestLifeCycle.new(properties: {[string]: any}): QuestLifeCycle
 end
 
 --[=[
-	Called when the player starts the quest
-
-	:::warning
-
-	This method only gets called on the first time the player starts a quest with this LifeCycle.
-	This means if there are 2 quests with the same lifecycle and the player already started one of them
-	then this method won't get called
-
-	:::
-
-	@return ()
-]=]
-function QuestLifeCycle:FirstStart(): ()
+	Called when the quest object gets created. 
 	
-end
+	If the player just joined the game and the quest is already in progress it will still call OnInit!
 
---[=[
-	Called when the player completes the quest
-	:::warning
+	:::info
 
-	This method only gets called when the player completed **ALL** quests that contain this lifecyle.
-	This means if the player has 2 quests with the same lifeycle in progress, only after he completes both of them
-	then will this method be called
+	This is a virtual method. Meaning you can override it in your lifecycle
 
 	:::
 
 	@return ()
 ]=]
-function QuestLifeCycle:AllComplete(): ()
+function QuestLifeCycle:OnInit(): ()
 	
 end
 
