@@ -1,4 +1,5 @@
 local Players = game:GetService("Players")
+
 local Red = require(script.Parent.Vendor.Red).Client
 local Signal = require(script.Parent.Vendor.Signal)
 local QuestLifeCycle = require(script.Parent.Shared.Classes.QuestLifeCycle)
