@@ -519,7 +519,6 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 	end)
 
 	net:On("OnQuestStarted", function(questId: string, questProgress: QuestProgress?)
-		print("Started")
 		self:_OnQuestStarted(questId, questProgress)
 	end)
 
@@ -532,7 +531,6 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 	end)
 
 	net:On("OnQuestCancelled", function(questId: string)
-		print("Cancelled")
 		self:_OnQuestCancelled(questId)
 	end)
 
@@ -1269,6 +1267,10 @@ function RoQuestClient:_GiveQuest(questId: string, questProgress: QuestProgress?
 		})
 	end
 
+	for _, lifeCycleName: string in questClone.LifeCycles do
+		self:_CreateLifeCycle(questClone, lifeCycleName)
+	end
+
 	self:_ChangeAvailableState(questId, nil)
 	self:_ChangeUnAvailableState(questId, nil)
 	self:_ChangeDeliveredQuest(questId, nil)
@@ -1324,9 +1326,8 @@ end
 --[=[
 	Creates a new lifecycle object for the given quest
 
-	@server
+	@client
 	@private
-	@param player Player
 	@param quest Quest
 	@param lifeCycleName string
 

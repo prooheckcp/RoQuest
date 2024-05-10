@@ -357,6 +357,34 @@ function Quest:RemoveObjective(objectiveId: string, amount: number): ()
 end
 
 --[=[
+    Gets how long until the quest becomes available.
+    It will return 0 if it is already available
+
+    @return number
+]=]
+function Quest:GetTimeForAvailable(): number
+    return math.max(0, workspace:GetServerTimeNow() - self:GetQuestStart())
+end
+
+--[=[
+    Gets the UTC time at which this quest should become available
+
+    @return number
+]=]
+function Quest:GetQuestStart(): number
+    return self.QuestStart
+end
+
+--[=[
+    Gets the UTC time at which this quest should become disabled and no longer be available
+
+    @return number
+]=]
+function Quest:GetQuestEnd(): number
+    return self.QuestEnd
+end
+
+--[=[
     Sets the quest objective to the given new value
 
     @param objectiveId string
