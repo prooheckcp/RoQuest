@@ -467,10 +467,10 @@ function RoQuestServer:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 
 	local net = Red.Server("QuestNamespace", {
 		"OnQuestObjectiveChanged",
+		"OnQuestCancelled",
 		"OnQuestStarted",
 		"OnQuestDelivered",
 		"OnQuestCompleted",
-		"OnQuestCancelled",
 		"OnQuestAvailable",
 		"OnQuestUnavailable",
 		"OnPlayerDataChanged",
@@ -945,13 +945,8 @@ function RoQuestServer:AddObjective(player: Player, objectiveId: string, amount:
 	if not self._PlayerQuestData[player] then
 		return
 	end
-	
-	if not self._StaticObjectiveReference[objectiveId] then
-		warn(string.format(WarningMessages.NoObjectiveId, objectiveId))
-		return
-	end
 
-	for questId: string in self._StaticObjectiveReference[objectiveId] do
+	for questId: string in self._StaticObjectiveReference[objectiveId] or {} do
 		local quest: Quest? = self:GetQuest(player, questId)
 
 		if not quest or quest:GetQuestStatus() ~= QuestStatus.InProgress then
@@ -989,7 +984,7 @@ function RoQuestServer:SetObjective(player: Player, objectiveId: string, amount:
 		return
 	end
 	
-	for questId: string in self._StaticObjectiveReference[objectiveId] do
+	for questId: string in self._StaticObjectiveReference[objectiveId] or {} do
 		local quest: Quest? = self:GetQuest(player, questId)
 
 		if not quest or quest:GetQuestStatus() ~= QuestStatus.InProgress then
@@ -1025,7 +1020,7 @@ function RoQuestServer:RemoveObjective(player: Player, objectiveId: string, amou
 		return
 	end
 	
-	for questId: string in self._StaticObjectiveReference[objectiveId] do
+	for questId: string in self._StaticObjectiveReference[objectiveId] or {} do
 		local quest: Quest? = self:GetQuest(player, questId)
 
 		if not quest or quest:GetQuestStatus() ~= QuestStatus.InProgress then
@@ -1163,6 +1158,7 @@ function RoQuestServer:CancelQuest(player: Player, questId: string): boolean
 	self._PlayerQuestData[player][quest:GetQuestStatus()][questId] = nil
 	quest:Destroy()
 	self.OnQuestCancelled:Fire(player, questId)
+	task.defer(self._NewPlayerAvailableQuest, self, player, questId)
 end
 
 --[=[

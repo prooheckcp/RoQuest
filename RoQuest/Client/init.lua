@@ -519,6 +519,7 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 	end)
 
 	net:On("OnQuestStarted", function(questId: string, questProgress: QuestProgress?)
+		print("Started")
 		self:_OnQuestStarted(questId, questProgress)
 	end)
 
@@ -531,6 +532,7 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 	end)
 
 	net:On("OnQuestCancelled", function(questId: string)
+		print("Cancelled")
 		self:_OnQuestCancelled(questId)
 	end)
 
