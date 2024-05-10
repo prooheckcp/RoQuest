@@ -21,6 +21,7 @@ local networkQuestParser = require(script.Parent.Shared.Functions.networkQuestPa
 local Promise = require(script.Parent.Vendor.Promise)
 local TimeRequirement = require(script.Parent.Shared.Data.TimeRequirement)
 local StatusToLifeCycle = require(script.Parent.Shared.Data.StatusToLifeCycle)
+local loadDirectory = require(script.Parent.Shared.Functions.loadDirectory)
 
 export type QuestObjective = QuestObjective.QuestObjective
 export type QuestObjectiveProgress = QuestObjectiveProgress.QuestObjectiveProgress
@@ -37,10 +38,6 @@ type Trove = Trove.Trove
 
 -- We want to give enough time for developers to get and save their player data
 local DATA_RELEASE_DELAY: number = 5
-local LOAD_DIRECTORY_TYPES: {[string]: true} = {
-	["Quest"] = true,
-	["QuestLifeCycle"] = true,
-}
 
 --[=[
 	@class RoQuestServer
@@ -566,7 +563,7 @@ end
 	@return {Quest | QuestLifeCycle} -- Returns an array with either just Quests or QuestLifeCycles
 ]=]
 function RoQuestServer:LoadDirectory(directory: Instance): {Quest | QuestLifeCycle}
-	return self:_LoadDirectory(directory:GetChildren())
+	return loadDirectory(directory:GetChildren())
 end
 
 --[=[
@@ -588,7 +585,7 @@ end
 	@return {Quest | QuestLifeCycle} -- Returns an array with either just Quests or QuestLifeCycles
 ]=]
 function RoQuestServer:LoadDirectoryDeep(directory: Instance): {Quest | QuestLifeCycle}
-	return self:_LoadDirectory(directory:GetDescendants())
+	return loadDirectory(directory:GetDescendants())
 end
 
 --[=[
@@ -1353,37 +1350,6 @@ function RoQuestServer:_QuestDelivered(player: Player, questId: string): ()
 	end
 
 	self:_NewPlayerAvailableQuest(player, questId)
-end
-
---[=[
-	Loads all the quests and lifecycles from the directory and returns them in an array
-
-	@private
-	@server
-	@param instancesToFilter {Instance}
-
-	@return {Quest | QuestLifeCycle}
-]=]
-function RoQuestServer:_LoadDirectory(instancesToFilter: {Instance}): {Quest | QuestLifeCycle}
-	local array: {Quest | QuestLifeCycle} = {}
-
-	for _, childInstance: Instance in instancesToFilter do
-		if not childInstance:IsA("ModuleScript") then
-			continue
-		end
-
-		local requiredObject: any = require(childInstance)
-
-		if LOAD_DIRECTORY_TYPES[requiredObject.__type] then
-			if #array > 0 and array[1].__type ~= requiredObject.__type then
-				error(WarningMessages.LoadDirectoryMixedType)
-			end
-
-			array[#array+1] = requiredObject
-		end
-	end
-
-	return array
 end
 
 --[=[

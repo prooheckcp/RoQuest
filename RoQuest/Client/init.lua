@@ -16,6 +16,7 @@ local QuestAcceptType = require(script.Parent.Shared.Enums.QuestAcceptType)
 local QuestStatus = require(script.Parent.Shared.Enums.QuestStatus)
 local Promise = require(script.Parent.Vendor.Promise)
 local StatusToLifeCycle = require(script.Parent.Shared.Data.StatusToLifeCycle)
+local loadDirectory = require(script.Parent.Shared.Functions.loadDirectory)
 
 export type QuestStatus = QuestStatus.QuestStatus
 export type QuestObjective = QuestObjective.QuestObjective
@@ -550,6 +551,48 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 
 		self._Initiated = true		
 	end)
+end
+
+--[=[
+	Loads all the quests and lifecycles right under the given director and returns them in an array
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest:Init(RoQuest:LoadDirectory(ReplicatedStorage.Quests))
+	```
+
+	@client
+	@param directory {Instance}
+
+	@return {Quest | QuestLifeCycle} -- Returns an array with either just Quests or QuestLifeCycles
+]=]
+function RoQuestClient:LoadDirectory(directory: Instance): {Quest | QuestLifeCycle}
+	return loadDirectory(directory:GetChildren())
+end
+
+--[=[
+	Loads all the quests and lifecycles from the descendants of the directory and returns them in an array.
+	The difference from :LoadDirectoryDeep and :LoadDirectory is that this one takes all descendants into account
+	instead of just the children
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest:Init(RoQuest:LoadDirectoryDeep(ReplicatedStorage.Quests))
+	```
+
+	@client
+	@param directory {Instance}
+
+	@return {Quest | QuestLifeCycle} -- Returns an array with either just Quests or QuestLifeCycles
+]=]
+function RoQuestClient:LoadDirectoryDeep(directory: Instance): {Quest | QuestLifeCycle}
+	return loadDirectory(directory:GetDescendants())
 end
 
 --[=[

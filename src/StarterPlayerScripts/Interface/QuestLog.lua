@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local RoQuest = require(ReplicatedStorage.RoQuest).Client
+local Red = require(ReplicatedStorage.RoQuest.Vendor.Red).Client
 
 type Quest = RoQuest.Quest
 
@@ -78,11 +79,16 @@ function QuestLog:DestroyQuest(scrollingFrame: ScrollingFrame, questId: string)
 end
 
 function QuestLog:CreateQuest(scrollingFrame: ScrollingFrame, quest: Quest)
+    local Net = Red "QuestManager"
+
     local frame: Frame = scrollingFrame:FindFirstChild(quest.QuestId) or template:Clone()
     frame.Name = quest.QuestId
     frame.Title.Text = quest.Name
     frame.Description.Text = quest.Description
     frame.Buttons.Cancel.Visible = quest:GetQuestStatus() == RoQuest.QuestStatus.InProgress
+    frame.Buttons.Cancel.Activated:Connect(function()
+        Net:Fire("CancelQuest", quest.QuestId)
+    end)
 
     frame.Visible = true
     frame.Parent = scrollingFrame

@@ -13,4 +13,8 @@ RoQuest.OnStart():andThen(function()
     Net:On("DeliverQuest", function(player: Player, questId: string)
         RoQuest:DeliverQuest(player, questId)
     end)
+
+    Net:On("CancelQuest", function(player: Player, questId: string)
+        RoQuest:CancelQuest(player, questId)
+    end)
 end)
