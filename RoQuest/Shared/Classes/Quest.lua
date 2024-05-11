@@ -296,6 +296,18 @@ function Quest.new(properties: {[string]: any}): Quest
 end
 
 --[=[
+    Checks if the objective with the given objectiveID has already been completed
+    by the quest owner or not
+
+    @param objectiveId string
+
+    @return boolean
+]=]
+function Quest:IsObjectiveCompleted(objectiveId: string): boolean
+    return self:GetObjective(objectiveId) == self:GetTargetObjective()
+end
+
+--[=[
     Gets the current status of the quest
 
     @return QuestStatus
