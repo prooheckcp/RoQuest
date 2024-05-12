@@ -115,6 +115,10 @@ RoQuest.OnStart():andThen(function()
 		Quests:UpdateObjective(RoQuest:GetQuest(questId), objectiveId, newValue)
 	end)
 	
+	RoQuest.OnPlayerDataChanged:Connect(function()
+		Quests:UpdateInterface()
+	end) -- Hard reset our screens  
+
 	Quests:UpdateInterface()
 end)
 ```
@@ -133,7 +137,7 @@ This will return all the quests that are currently in progress
 
 ## ⚡ Listening to Data
 
-Once we have all of our data set we want to update teh UI under 2 circumstances: when either the data of the quests we're showing changes OR when the quests that are currently in progress change. To do that we can use these 2 events:
+Once we have all of our data set we want to update teh UI under 2 circumstances: when either the data of the quests we're showing changes OR when the quests that are currently in progress change. To do that we can use these 3 events:
 
 ```lua
 RoQuest.OnInProgressQuestChanged:Connect(function()
@@ -143,6 +147,10 @@ end)
 RoQuest.OnQuestObjectiveChanged:Connect(function(questId: string, objectiveId: string, newValue: number)
     Quests:UpdateObjective(RoQuest:GetQuest(questId), objectiveId, newValue)
 end)
+
+RoQuest.OnPlayerDataChanged:Connect(function()
+	Quests:UpdateInterface()
+end) -- Hard reset our screens  
 ```
 
 :::warning
