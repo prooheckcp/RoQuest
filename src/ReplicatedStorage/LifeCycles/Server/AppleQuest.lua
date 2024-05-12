@@ -10,14 +10,6 @@ local AppleQuest = QuestLifeCycle {
     Name = "AppleQuest",
 }
 
-function AppleQuest:FirstStart()
-    print("Apple First Start")
-end
-
-function AppleQuest:AllComplete()
-    print("Apple All Complete")
-end
-
 function AppleQuest:OnStart()
     print("Apple On Start")
 end
