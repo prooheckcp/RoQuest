@@ -510,6 +510,8 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 		self:_ChangeUnAvailableState(questId, true)
 	end
 
+	self:_OnPlayerDataChanged(net:Call("GetPlayerData"):Await())
+
 	net:On("OnPlayerDataChanged", function(playerQuestData: PlayerQuestData)
 		self:_OnPlayerDataChanged(playerQuestData)
 	end)
@@ -541,8 +543,6 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 	net:On("OnQuestUnavailable", function(questId: string)
 		self:_OnQuestUnavailable(questId)
 	end)
-
-	self:_OnPlayerDataChanged(net:Call("GetPlayerData"):Await())
 
 	task.spawn(function()
 		while not self._PlayerQuestData do
