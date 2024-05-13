@@ -47,3 +47,5 @@ for _, stick in CollectionService:GetTagged("Stick") do
 	stickAdded(stick)
 end
 ```
+
+THERES A BUG
