@@ -1,29 +1,4 @@
 {
-  "name": "RoQuest",
-  "tree": {
-    "$className": "DataModel",
-
-    "RoQuest":{
-      "$path": "RoQuest"
-    },
-
-    "ReplicatedStorage": {
-      "$path": "ReplicatedStorage",
-      "RoQuest":{
-        "$path": "RoQuest"
-      }
-    },
-
-    "ServerScriptService": {
-      "Server": {
-        "$path": "src/ServerScriptService"
-      }
-    },
-
-    "StarterPlayer": {
-      "StarterPlayerScripts": {
-        "$path": "src/StarterPlayerScripts"
-      }
-    }
-  }
+  "name": "roquest",
+  "tree": {"$path":"RoQuest"}
 }

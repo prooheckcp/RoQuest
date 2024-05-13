@@ -1,0 +1,44 @@
+[[classOrder]]
+section = "🏠Main Modules"
+classes = ["RoQuestClient", "RoQuestServer"]
+
+[[classOrder]]
+section = "📚Classes"
+classes = ["QuestObjective", "ObjectiveInfo", "Quest", "QuestLifeCycle"]
+
+[[classOrder]]
+section = "🔄Enums"
+classes = ["QuestStatus", "QuestRepeatableType", "QuestDeliverType", "QuestAcceptType"]
+
+[[classOrder]]
+section = "🛠️Structs"
+classes = ["QuestProgress", "QuestObjectiveProgress", "PlayerQuestData"]
+
+[[classOrder]]
+section = "🛒Vendor"
+classes = ["Signal", "Trove", "Promise"]
+
+[docusaurus]
+onBrokenLinks = "throw"
+onBrokenMarkdownLinks = "warn"
+favicon = "favicon.png"
+tagline = "A complete quest system for Roblox games!"
+
+[home]
+enabled = true
+includeReadme = false
+
+[[home.features]]
+title = "Server -> Client"
+description = "RoQuest automatically replicates all the quest data to the client making it easy to update UIs and handling data on the client"
+image = "ClientServer.png"
+
+[[home.features]]
+title = "Abstract implementation"
+description = "RoQuest is an abstract implementation meaning it isn't fully auto managed. The developer has full control on how quests and loaded/saved and how they are handled"
+image = "Lego.png"
+
+[[home.features]]
+title = "Fast"
+description = "RoQuest takes advantage of a lot of caching in order to keep most getters with an O(1) complexity. This allows us to quickly retrieve and modify the data"
+image = "Noob.png"
