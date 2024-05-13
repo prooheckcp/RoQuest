@@ -24,7 +24,7 @@ RoQuest.OnStart():andThen(function()
         end)
 
         if playerData then -- Set the data on RoQuest
-            RoQuest:SetPlayerData(player, playerData)
+            --RoQuest:SetPlayerData(player, playerData)
         end
     end
     
