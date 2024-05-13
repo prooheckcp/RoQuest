@@ -25,12 +25,12 @@ local CollectionService = game:GetService("CollectionService")
 local RoQuest = require(ReplicatedStorage.RoQuest).Server
 
 local function appleAdded(apple)
+	local clone = apple:Clone()
 	local proximityPrompt = Instance.new("ProximityPrompt")
 	proximityPrompt.ActionText = "Collect Apple"
 	proximityPrompt.HoldDuration = 0.25
 	
 	proximityPrompt.Triggered:Connect(function(player)
-		local clone = apple:Clone()
 		apple:Destroy()
 		
 		RoQuest:AddObjective(player, "Apple", 1) -- Add to the quest
