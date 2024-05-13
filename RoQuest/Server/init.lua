@@ -1454,6 +1454,7 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 		if quest then -- We are repeating the quest!!!
 			questProgress = quest:_GetQuestProgress()
 			questProgress.QuestObjectiveProgresses = questObjectiveProgresses
+			questProgress.QuestStatus = QuestStatus.InProgress
 		end
 	end
 
@@ -1464,7 +1465,6 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 			end
 		end
 
-		questProgress.QuestStatus = QuestStatus.InProgress
 		questClone:_SetQuestProgress(questProgress)
 	else
 		questClone:_SetQuestProgress(QuestProgress {
@@ -1482,8 +1482,8 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 
 	self._AvailableQuests[player][questId] = nil
 	self._Quests[player][questId] = questClone
-	self._PlayerQuestData[player].InProgress[questId] = questClone:_GetQuestProgress()
 	self._PlayerQuestData[player].Delivered[questId] = nil
+	self._PlayerQuestData[player][questClone:GetQuestStatus()][questId] = questClone:_GetQuestProgress()
 	self._Troves[player]:Add(questClone)
 
 	return true
@@ -1501,7 +1501,7 @@ end
 function RoQuestServer:_LoadPlayerData(player: Player): ()
 	self._Quests[player] = {} -- Reset our player quest
 	self._Troves[player]:Clean()
-
+	
 	for _questStatus, questArray: {[string]: QuestProgress} in self:GetPlayerData(player) do
 		for questId: string, questProgress: QuestProgress in questArray do
 			self:_GiveQuest(player, questId, questProgress)
