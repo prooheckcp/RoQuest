@@ -470,10 +470,10 @@ function RoQuestServer:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 		"OnQuestCancelled",
 		"OnQuestDelivered",
 		"OnQuestCompleted",
-		"OnQuestAvailable",
 		"OnQuestUnavailable",
 		"OnPlayerDataChanged",
 		"OnQuestStarted",
+		"OnQuestAvailable",
 	})
 
 	self.OnQuestObjectiveChanged:Connect(function(player: Player, questId: string, objectiveId: string, newAmount: number)

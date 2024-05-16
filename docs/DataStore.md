@@ -52,21 +52,13 @@ RoQuest.OnStart():andThen(function()
 	end
 	
 	Players.PlayerRemoving:Connect(playerRemoved)
-	
-	RoQuest.OnQuestObjectiveChanged:Connect(function(player: Player, questId: string, objectiveId: string, newValue: number)
-		print(player.Name, " got ", newValue, objectiveId)
-	end)
-	
-	RoQuest.OnQuestCompleted:Connect(function(player: Player, questId: string)
-		print(player.Name, " just completed the quest: ", questId)
-	end)
 end)
 ```
 
 ## 🔍 ProfileService
 
 ```lua
-    local ProfileStore = ProfileService.GetProfileStore("RamdomKey", {})
+    local ProfileStore = ProfileService.GetProfileStore("RandomKey", {})
     local profile = ProfileStore:LoadProfileAsync("USER_"..userId)
 
     if not profile.Data then
