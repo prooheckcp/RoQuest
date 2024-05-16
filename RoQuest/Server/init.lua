@@ -468,12 +468,12 @@ function RoQuestServer:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 	local net = Red.Server("QuestNamespace", {
 		"OnQuestObjectiveChanged",
 		"OnQuestCancelled",
-		"OnQuestStarted",
 		"OnQuestDelivered",
 		"OnQuestCompleted",
-		"OnQuestAvailable",
 		"OnQuestUnavailable",
 		"OnPlayerDataChanged",
+		"OnQuestStarted",
+		"OnQuestAvailable",
 	})
 
 	self.OnQuestObjectiveChanged:Connect(function(player: Player, questId: string, objectiveId: string, newAmount: number)
@@ -1381,7 +1381,7 @@ function RoQuestServer:_QuestBecameAvailable(questId: string): ()
 	self._StaticAvailableQuests[questId] = true -- Should give to players if possible
 
 	for player: Player in self._Quests do
-		self:_NewPlayerAvailableQuest(player, questId)
+		task.delay(0, self._NewPlayerAvailableQuest, self, player, questId)
 	end
 end
 
@@ -1454,6 +1454,7 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 		if quest then -- We are repeating the quest!!!
 			questProgress = quest:_GetQuestProgress()
 			questProgress.QuestObjectiveProgresses = questObjectiveProgresses
+			questProgress.QuestStatus = QuestStatus.InProgress
 		end
 	end
 
@@ -1464,7 +1465,6 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 			end
 		end
 
-		questProgress.QuestStatus = QuestStatus.InProgress
 		questClone:_SetQuestProgress(questProgress)
 	else
 		questClone:_SetQuestProgress(QuestProgress {
@@ -1476,15 +1476,16 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 		})
 	end
 
-	for _, lifeCycleName: string in questClone.LifeCycles do
-		self:_CreateLifeCycle(player, questClone, lifeCycleName)
-	end
 
 	self._AvailableQuests[player][questId] = nil
 	self._Quests[player][questId] = questClone
-	self._PlayerQuestData[player].InProgress[questId] = questClone:_GetQuestProgress()
 	self._PlayerQuestData[player].Delivered[questId] = nil
+	self._PlayerQuestData[player][questClone:GetQuestStatus()][questId] = questClone:_GetQuestProgress()
 	self._Troves[player]:Add(questClone)
+
+	for _, lifeCycleName: string in questClone.LifeCycles do
+		self:_CreateLifeCycle(player, questClone, lifeCycleName)
+	end
 
 	return true
 end
@@ -1501,7 +1502,7 @@ end
 function RoQuestServer:_LoadPlayerData(player: Player): ()
 	self._Quests[player] = {} -- Reset our player quest
 	self._Troves[player]:Clean()
-
+	
 	for _questStatus, questArray: {[string]: QuestProgress} in self:GetPlayerData(player) do
 		for questId: string, questProgress: QuestProgress in questArray do
 			self:_GiveQuest(player, questId, questProgress)
@@ -1555,6 +1556,7 @@ function RoQuestServer:_NewPlayerAvailableQuest(player: Player, questId: string)
 	end
 
 	if quest.QuestAcceptType == QuestAcceptType.Automatic then
+		self.OnQuestAvailable:Fire(player, questId)
 		self:GiveQuest(player, questId)
 	elseif not self._AvailableQuests[player][questId] then
 		self._AvailableQuests[player][questId] = true
@@ -1608,10 +1610,10 @@ function RoQuestServer:_CreateLifeCycle(player: Player, quest: Quest, lifeCycleN
 
 	self._LifeCycles[player][lifeCycleName][quest.QuestId] = newLifeCycle
 
+	local startStatus: QuestStatus = quest:GetQuestStatus()
 	self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, "OnInit")
-
-	if StatusToLifeCycle[quest:GetQuestStatus()] then
-		self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, StatusToLifeCycle[quest:GetQuestStatus()])
+	if StatusToLifeCycle[startStatus] then
+		self:_CallLifeCycle(player, quest.QuestId, lifeCycleName, StatusToLifeCycle[startStatus])
 	end
 end
 

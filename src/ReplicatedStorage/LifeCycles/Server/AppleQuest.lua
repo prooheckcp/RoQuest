@@ -11,23 +11,23 @@ local AppleQuest = QuestLifeCycle {
 }
 
 function AppleQuest:OnStart()
-    print("Apple On Start")
+    --print("Apple On Start")
 end
 
 function AppleQuest:OnComplete()
-    print("Apple On Complete")
+    --print("Apple On Complete")
 end
 
 function AppleQuest:OnObjectiveChange(...)
-    print(...)
+    --print(...)
 end
 
 function AppleQuest:OnDeliver()
-    print("Apple On Deliver")
+    --print("Apple On Deliver")
 end
 
 function AppleQuest:OnDestroy()
-    print("Apple On Destroy")
+    --print("Apple On Destroy")
 end
 
 return AppleQuest
