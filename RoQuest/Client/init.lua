@@ -196,6 +196,25 @@ RoQuestClient.OnQuestCancelled = Signal.new() -- Event(questId: string)
 ]=]
 RoQuestClient.OnQuestAvailable = Signal.new()
 --[=[
+	This gets called when a quest becomes unavailable. Usually only happens when a quest
+	gets disabled at run-time or when the quest's end time has passed 
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest.OnQuestUnavailable:Connect(function(questId: string)
+		print("The player's quest has just been cancelled: ", RoQuest:GetStaticQuest(questId).Name)
+	end)
+	```
+
+	@client
+	@prop OnQuestUnavailable Signal
+	@within RoQuestClient
+]=]
+RoQuestClient.OnQuestUnavailable = Signal.new()
+--[=[
 	This gets called whenever the quests that are unavailable changes.
 	This means that either a quest just became available OR that a quest became
 	unavailable (such as a quest with an end time)
@@ -1129,6 +1148,8 @@ function RoQuestClient:_ChangeAvailableState(questId: string, state: true?): ()
 
 	if state then
 		self.OnQuestAvailable:Fire(questId)
+	else
+		self.OnQuestUnavailable:Fire(questId)
 	end
 end
 
