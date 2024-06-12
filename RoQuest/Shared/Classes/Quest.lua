@@ -391,7 +391,29 @@ end
     @return number
 ]=]
 function Quest:GetTimeForAvailable(): number
-    return math.max(0, workspace:GetServerTimeNow() - self:GetQuestStart())
+    local serverTime: number = workspace:GetServerTimeNow()
+
+    if serverTime < self:GetQuestStart() then
+        return self:GetQuestStart() - serverTime
+    end
+
+    return 0
+end
+
+--[=[
+    Will return how long until the quest becomes unavailable.
+    It will return 0 if it is already unavailable
+    
+    @return number
+]=]
+function Quest:GetTimeForUnavailable(): number
+    local serverTime: number = workspace:GetServerTimeNow()
+
+    if serverTime < self:GetQuestEnd() then
+        return self:GetQuestEnd() - serverTime
+    end
+
+    return 0
 end
 
 --[=[
