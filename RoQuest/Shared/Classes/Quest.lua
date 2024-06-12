@@ -61,6 +61,19 @@ local Quest = {}
 Quest.__index = Quest
 Quest.__type = "Quest"
 --[=[
+    Called whenever a quest objective gets completed
+
+    ```lua
+    quest.OnQuestObjectiveCompleted:Connect(function(objectiveId: string)
+        print("Completed Objective: " .. objectiveId)
+    end)
+    ```
+
+    @prop OnQuestObjectiveCompleted Signal
+    @within Quest
+]=]
+Quest.OnQuestObjectiveCompleted = newproxy() :: Signal
+--[=[
     Called whenever one of the quests objective changes the value
 
     ```lua
@@ -265,6 +278,7 @@ Quest._Trove = newproxy() :: Trove
 function Quest.new(properties: {[string]: any}): Quest
     properties = properties or {}
     local self: Quest = assertProperties(properties, Quest)
+    self.OnQuestObjectiveCompleted = Signal.new()
     self.OnQuestObjectiveChanged = Signal.new()
     self.OnQuestCompleted = Signal.new()
     self.OnQuestDelivered = Signal.new()
@@ -288,6 +302,8 @@ function Quest.new(properties: {[string]: any}): Quest
         LastCompletedTick = 0,
     })
     self._Trove = Trove.new()
+    self._Trove:Add(self.OnQuestObjectiveCompleted)
+    self._Trove:Add(self.OnQuestObjectiveChanged)
     self._Trove:Add(self.OnQuestCompleted)
     self._Trove:Add(self.OnQuestDelivered)
     self._Trove:Add(self.OnQuestCanceled)
@@ -564,6 +580,7 @@ function Quest:_SetQuestProgress(newQuestProgress: QuestProgress): ()
         newQuestObjective._QuestObjectiveProgress = questObjectiveProgress
 
         newQuestObjective.Completed:Connect(function()
+            self.OnQuestObjectiveCompleted:Fire(objectiveId)
             self:_CheckProgress()
         end)
 
