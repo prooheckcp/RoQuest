@@ -166,6 +166,44 @@ RoQuestServer.OnQuestDelivered = Signal.new() -- Event (player: Player, questId:
 ]=]
 RoQuestServer.OnQuestCancelled = Signal.new()
 --[=[
+	This gets called when a quest becomes available. This isn't player specific and instead
+	gets called when per e.g a quest with a starting and end date becomes available
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest.OnTimeQuestAvailable:Connect(function(questId: string)
+		print("The following quest just became available: ", RoQuest:GetQuest(player, questId).Name)
+	end)
+	```
+
+	@server
+	@prop OnTimeQuestAvailable Signal
+	@within RoQuestServer
+]=]
+RoQuestServer.OnTimeQuestAvailable = Signal.new()
+--[=[
+	This gets called when a quest becomes unavailable. This isn't player specific and instead
+	gets called when per e.g a quest with a starting and end date becomes unavailable
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest.OnTimeQuestUnavailable:Connect(function(questId: string)
+		print("The following quest just became unavailable: ", RoQuest:GetQuest(player, questId).Name)
+	end)
+	```
+
+	@server
+	@prop OnTimeQuestUnavailable Signal
+	@within RoQuestServer
+]=]
+RoQuestServer.OnTimeQuestUnavailable = Signal.new()
+--[=[
 	This gets called when a quest becomes available. This usually means that the player
 	can now accept this quest at a given quest giver
 
@@ -174,7 +212,7 @@ RoQuestServer.OnQuestCancelled = Signal.new()
 
 	local RoQuest = require(ReplicatedStorage.RoQuest).Server
 
-	RoQuest.OnQuestAvailable:Connect(function(questId: string)
+	RoQuest.OnQuestAvailable:Connect(function(player: Player, questId: string)
 		print("The following quest just became available: ", RoQuest:GetQuest(player, questId).Name)
 	end)
 	```
@@ -863,6 +901,8 @@ end
 	@return ()
 ]=]
 function RoQuestServer:SetPlayerData(player: Player, data: PlayerQuestData): ()
+	self:_WaitForPlayerToLoad(player)
+
 	self._PlayerQuestData[player] = data
 
 	self:_LoadPlayerData(player)
@@ -1379,6 +1419,7 @@ function RoQuestServer:_QuestBecameAvailable(questId: string): ()
 	end
 
 	self._StaticAvailableQuests[questId] = true -- Should give to players if possible
+	self.OnTimeQuestAvailable:Fire(questId)
 
 	for player: Player in self._Quests do
 		task.delay(0, self._NewPlayerAvailableQuest, self, player, questId)
@@ -1402,6 +1443,7 @@ function RoQuestServer:_QuestBecameUnavailable(questId: string): ()
 	end
 
 	self._StaticAvailableQuests[questId] = nil
+	self.OnTimeQuestUnavailable:Fire(questId)
 
 	for player: Player in self._Quests do
 		self:_NewPlayerAvailableQuest(player, questId)
