@@ -653,6 +653,29 @@ function RoQuestServer:GetStaticQuest(questId: string): Quest?
 end
 
 --[=[
+	Gets all the available static quests
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	local quest: {[string]: Quest} = RoQuest:GetAvailableStaticQuests()
+	```
+
+	@return {[string]: Quest}
+]=]
+function RoQuestServer:GetAvailableStaticQuests(): {[string]: Quest}
+	local quests: {[string]: Quest} = {}
+
+	for questId: string in self._StaticAvailableQuests do
+		quests[questId] = self:GetStaticQuest(questId)
+	end
+
+	return quests
+end
+
+--[=[
 	Gets the static data of all of the cached quests
 
 	```lua
