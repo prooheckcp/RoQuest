@@ -320,7 +320,7 @@ end
     @return boolean
 ]=]
 function Quest:IsObjectiveCompleted(objectiveId: string): boolean
-    return self:GetObjective(objectiveId) == self:GetTargetObjective()
+    return self:GetObjective(objectiveId) == self:GetTargetObjective(objectiveId)
 end
 
 --[=[
@@ -482,7 +482,7 @@ function Quest:GetObjective(objectiveId: number): number
 end
 
 --[=[
-    Gets teh target objective by the id
+    Gets the target objective by the id
 
     @param objectiveId string
 
