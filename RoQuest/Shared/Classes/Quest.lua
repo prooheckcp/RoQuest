@@ -499,6 +499,40 @@ function Quest:GetTargetObjective(objectiveId: string): number
 end
 
 --[=[
+    Returns a number with the amount of objectives that exist within
+    this quest
+
+    @return number
+]=]
+function Quest:GetQuestObjectivesCount(): number
+    local counter: number = 0
+
+    for _ in self:GetQuestObjectives() do
+        counter += 1
+    end
+
+    return counter
+end
+
+--[=[
+    Returns a number with the amount of **completed** objectives that exist within
+    this quest
+    
+    @return number
+]=]
+function Quest:GetQuestObjectivesCompletedCount(): number
+    local counter: number = 0
+
+    for _, questObjective: QuestObjective in self:GetQuestObjectives() do
+        if questObjective:IsCompleted() then
+            counter += 1
+        end
+    end
+
+    return counter
+end
+
+--[=[
     Returns an array of quest objectives for this given quest
 
     @return {[string]: QuestObjective} -- The index stands for the questId while the value stands for the QuestObjective class
