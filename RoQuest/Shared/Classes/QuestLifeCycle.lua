@@ -61,24 +61,28 @@ type Quest = { -- Fake quest type for autocomplete candy
 		Name = "AppleQuest",
 	}
 
-	function appleQuest:OnAvailable()
-		print("AppleQuest is now available!")
+	function appleQuest:OnInit()
+		print("AppleQuest OnInit")
 	end
 
-	function appleQuest:OnStarted()
+	function appleQuest:OnStart()
 		print("AppleQuest has been started!")
 	end
 
-	function appleQuest:OnCompleted()
+	function appleQuest:OnComplete()
 		print("AppleQuest has been completed!")
 	end
 
-	function appleQuest:OnDelivered()
+	function appleQuest:OnDeliver()
 		print("AppleQuest has been delivered!")
 	end
 
-	function appleQuest:OnObjectiveChanged(objectiveId: string, newAmount: number)
+	function appleQuest:OnObjectiveChange(objectiveId: string, newAmount: number)
 		print("Objective " .. objectiveId .. " has been updated to " .. newAmount)
+	end
+
+	function appleQuest:OnDestroy()
+		print("AppleQuest has been destroyed!")
 	end
 	```
 
