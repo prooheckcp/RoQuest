@@ -6,4 +6,5 @@ return  {
     DuplicateLifeCycleName = "Duplicate life cycle name %s found",
     NoObjectiveId = "No objective with the id %s exists in any of the loaded quests",
     NoLifeCycleMethod = "No method %s exists in the life cycle %s",
+    SetPlayerData = "When using RoQuest:SetPlayerData make sure to pass a PlayerQuestData struct\n\nlocal RoQuest = require(ReplicatedStorage.RoQuest).Server\nlocal PlayerQuestData = RoQuest.PlayerQuestData\nRoQuest:SetPlayerData(player, PlayerQuestData {})",
 }

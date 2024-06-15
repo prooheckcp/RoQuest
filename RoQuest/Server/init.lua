@@ -926,6 +926,11 @@ end
 function RoQuestServer:SetPlayerData(player: Player, data: PlayerQuestData): ()
 	self:_WaitForPlayerToLoad(player)
 
+	if not data.InProgress or not data.Completed or not data.Delivered then
+		error(WarningMessages.SetPlayerData)
+		return
+	end
+
 	self._PlayerQuestData[player] = data
 
 	self:_LoadPlayerData(player)

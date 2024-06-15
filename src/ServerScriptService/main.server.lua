@@ -5,6 +5,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local RoQuest = require(ReplicatedStorage.RoQuest).Server
 
 local questsStore = DataStoreService:GetDataStore("PlayerQuests")
+local PlayerQuestData = RoQuest.PlayerQuestData
 
 RoQuest:Init(
     RoQuest:LoadDirectory(ReplicatedStorage.Quests), 
@@ -17,15 +18,23 @@ RoQuest.OnStart():andThen(function()
             return questsStore:GetAsync("player_"..player.UserId)
         end)
         
-        print("Joined", playerData)
+
+
+        print(PlayerQuestData {
+            InProgress = {},
+            Completed = {},
+            Delivered = {},
+        })
+
+        print(PlayerQuestData {})
 
         task.delay(1, function()
             print("After 1 sec", RoQuest:GetPlayerData(player))
         end)
 
-        if playerData then -- Set the data on RoQuest
-            --RoQuest:SetPlayerData(player, playerData)
-        end
+        --if playerData then -- Set the data on RoQuest
+            RoQuest:SetPlayerData(player, {})
+        --end
     end
     
     local function playerRemoved(player: Player)
