@@ -17,24 +17,13 @@ RoQuest.OnStart():andThen(function()
         local success, playerData = pcall(function()
             return questsStore:GetAsync("player_"..player.UserId)
         end)
-        
 
-
-        print(PlayerQuestData {
-            InProgress = {},
-            Completed = {},
-            Delivered = {},
-        })
-
-        print(PlayerQuestData {})
-
-        task.delay(1, function()
-            print("After 1 sec", RoQuest:GetPlayerData(player))
-        end)
-
-        --if playerData then -- Set the data on RoQuest
-            RoQuest:SetPlayerData(player, {})
-        --end
+        if playerData then -- Set the data on RoQuest
+            task.delay(2, function()
+                print("[test] Set player data!", playerData)
+                RoQuest:SetPlayerData(player, playerData)
+            end)
+        end
     end
     
     local function playerRemoved(player: Player)

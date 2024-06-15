@@ -978,6 +978,7 @@ end
 	@return ()
 ]=]
 function RoQuestClient:_OnPlayerDataChanged(playerQuestData: PlayerQuestData)
+	self._Quests = {}
 	self._PlayerQuestData = playerQuestData
 
 	for questId: string, questProgress: QuestProgress in playerQuestData.InProgress do
