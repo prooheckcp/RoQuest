@@ -18,24 +18,28 @@ local appleQuest = QuestLifeCycle.new {
 	Name = &quot;AppleQuest&quot;,
 }
 
-function appleQuest:OnAvailable()
-	print(&quot;AppleQuest is now available!&quot;)
+function appleQuest:OnInit()
+	print(&quot;AppleQuest OnInit&quot;)
 end
 
-function appleQuest:OnStarted()
+function appleQuest:OnStart()
 	print(&quot;AppleQuest has been started!&quot;)
 end
 
-function appleQuest:OnCompleted()
+function appleQuest:OnComplete()
 	print(&quot;AppleQuest has been completed!&quot;)
 end
 
-function appleQuest:OnDelivered()
+function appleQuest:OnDeliver()
 	print(&quot;AppleQuest has been delivered!&quot;)
 end
 
-function appleQuest:OnObjectiveChanged(objectiveId: string, newAmount: number)
+function appleQuest:OnObjectiveChange(objectiveId: string, newAmount: number)
 	print(&quot;Objective &quot; .. objectiveId .. &quot; has been updated to &quot; .. newAmount)
+end
+
+function appleQuest:OnDestroy()
+	print(&quot;AppleQuest has been destroyed!&quot;)
 end
 ```"><meta data-rh="true" property="og:description" content="QuestLifeCycles are classes that are used to give behavior to our quests. They get associated to a quest when it gets declared
 and will allow the developer to update world instances and other things when the quest is available, started, completed or delivered
@@ -52,28 +56,32 @@ local appleQuest = QuestLifeCycle.new {
 	Name = &quot;AppleQuest&quot;,
 }
 
-function appleQuest:OnAvailable()
-	print(&quot;AppleQuest is now available!&quot;)
+function appleQuest:OnInit()
+	print(&quot;AppleQuest OnInit&quot;)
 end
 
-function appleQuest:OnStarted()
+function appleQuest:OnStart()
 	print(&quot;AppleQuest has been started!&quot;)
 end
 
-function appleQuest:OnCompleted()
+function appleQuest:OnComplete()
 	print(&quot;AppleQuest has been completed!&quot;)
 end
 
-function appleQuest:OnDelivered()
+function appleQuest:OnDeliver()
 	print(&quot;AppleQuest has been delivered!&quot;)
 end
 
-function appleQuest:OnObjectiveChanged(objectiveId: string, newAmount: number)
+function appleQuest:OnObjectiveChange(objectiveId: string, newAmount: number)
 	print(&quot;Objective &quot; .. objectiveId .. &quot; has been updated to &quot; .. newAmount)
 end
+
+function appleQuest:OnDestroy()
+	print(&quot;AppleQuest has been destroyed!&quot;)
+end
 ```"><link data-rh="true" rel="icon" href="/RoQuest/favicon.png"><link data-rh="true" rel="canonical" href="https://prooheckcp.github.io/RoQuest/api/QuestLifeCycle"><link data-rh="true" rel="alternate" href="https://prooheckcp.github.io/RoQuest/api/QuestLifeCycle" hreflang="en"><link data-rh="true" rel="alternate" href="https://prooheckcp.github.io/RoQuest/api/QuestLifeCycle" hreflang="x-default"><link rel="stylesheet" href="/RoQuest/assets/css/styles.4e723dca.css">
-<link rel="preload" href="/RoQuest/assets/js/runtime~main.a0c6196b.js" as="script">
-<link rel="preload" href="/RoQuest/assets/js/main.7bf77c46.js" as="script">
+<link rel="preload" href="/RoQuest/assets/js/runtime~main.bf1ca6a3.js" as="script">
+<link rel="preload" href="/RoQuest/assets/js/main.a8ad7f1f.js" as="script">
 </head>
 <body class="navigation-with-keyboard">
 <script>!function(){function e(e){document.documentElement.setAttribute("data-theme",e)}var t=function(){var e=null;try{e=localStorage.getItem("theme")}catch(e){}return e}();null!==t?e(t):window.matchMedia("(prefers-color-scheme: dark)").matches?e("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,e("light"))}()</script><div id="__docusaurus">
@@ -99,39 +107,43 @@ end
 	Name <span class="token operator">=</span> <span class="token string">"AppleQuest"</span><span class="token punctuation">,</span>
 <span class="token punctuation">}</span>
 
-<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnAvailable</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-	<span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"AppleQuest is now available!"</span><span class="token punctuation">)</span>
+<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnInit</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"AppleQuest OnInit"</span><span class="token punctuation">)</span>
 <span class="token keyword">end</span>
 
-<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnStarted</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnStart</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
 	<span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"AppleQuest has been started!"</span><span class="token punctuation">)</span>
 <span class="token keyword">end</span>
 
-<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnCompleted</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnComplete</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
 	<span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"AppleQuest has been completed!"</span><span class="token punctuation">)</span>
 <span class="token keyword">end</span>
 
-<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnDelivered</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnDeliver</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
 	<span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"AppleQuest has been delivered!"</span><span class="token punctuation">)</span>
 <span class="token keyword">end</span>
 
-<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnObjectiveChanged</span><span class="token punctuation">(</span>objectiveId<span class="token punctuation">:</span> string<span class="token punctuation">,</span> newAmount<span class="token punctuation">:</span> number<span class="token punctuation">)</span>
+<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnObjectiveChange</span><span class="token punctuation">(</span>objectiveId<span class="token punctuation">:</span> string<span class="token punctuation">,</span> newAmount<span class="token punctuation">:</span> number<span class="token punctuation">)</span>
 	<span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"Objective "</span> <span class="token operator">..</span> objectiveId <span class="token operator">..</span> <span class="token string">" has been updated to "</span> <span class="token operator">..</span> newAmount<span class="token punctuation">)</span>
 <span class="token keyword">end</span>
+
+<span class="token keyword">function</span> appleQuest<span class="token punctuation">:</span><span class="token function">OnDestroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"AppleQuest has been destroyed!"</span><span class="token punctuation">)</span>
+<span class="token keyword">end</span>
 </code></pre>
-</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="properties">Properties<a href="#properties" class="hash-link" aria-label="Direct link to Properties" title="Direct link to Properties">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Name"><code style="text-decoration:none">Name</code><a href="#Name" class="hash-link" aria-label="Direct link to Name" title="Direct link to Name">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L96"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->.<!-- -->Name<!-- -->:<!-- --> </code> <code class="blue_P4bS">string</code></div><div>
+</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="properties">Properties<a href="#properties" class="hash-link" aria-label="Direct link to Properties" title="Direct link to Properties">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Name"><code style="text-decoration:none">Name</code><a href="#Name" class="hash-link" aria-label="Direct link to Name" title="Direct link to Name">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L100"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->.<!-- -->Name<!-- -->:<!-- --> </code> <code class="blue_P4bS">string</code></div><div>
 <p>The name of the lifecycle. This needs to be unique for each lifecycle</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Player"><code style="text-decoration:none">Player</code><a href="#Player" class="hash-link" aria-label="Direct link to Player" title="Direct link to Player">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L103"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->.<!-- -->Player<!-- -->:<!-- --> </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Player"><code style="text-decoration:none">Player</code><a href="#Player" class="hash-link" aria-label="Direct link to Player" title="Direct link to Player">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L107"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->.<!-- -->Player<!-- -->:<!-- --> </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div><div>
 <p>A reference to the player to which this lifecycle is associated</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Quest"><code style="text-decoration:none">Quest</code><a href="#Quest" class="hash-link" aria-label="Direct link to Quest" title="Direct link to Quest">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L110"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->.<!-- -->Quest<!-- -->:<!-- --> </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/RoQuest/api/Quest">Quest</a></code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Quest"><code style="text-decoration:none">Quest</code><a href="#Quest" class="hash-link" aria-label="Direct link to Quest" title="Direct link to Quest">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L114"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->.<!-- -->Quest<!-- -->:<!-- --> </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/RoQuest/api/Quest">Quest</a></code></div><div>
 <p>A reference to the quest that this lifecycle is managing</p>
-</div><h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="new"><code style="text-decoration:none">new</code><a href="#new" class="hash-link" aria-label="Direct link to new" title="Direct link to new">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L125"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->.</code><code class="green_DgR4">new</code><code>(</code><code>properties<!-- -->: </code><code class="purple_ieR2">{</code><span><code>[</code><code class="blue_P4bS">string</code><code>]</code></span><code>: </code><code class="blue_P4bS">any</code><code class="purple_ieR2">}</code><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/RoQuest/api/Quest">Quest</a></code></div><div>
+</div><h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="new"><code style="text-decoration:none">new</code><a href="#new" class="hash-link" aria-label="Direct link to new" title="Direct link to new">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L129"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->.</code><code class="green_DgR4">new</code><code>(</code><code>properties<!-- -->: </code><code class="purple_ieR2">{</code><span><code>[</code><code class="blue_P4bS">string</code><code>]</code></span><code>: </code><code class="blue_P4bS">any</code><code class="purple_ieR2">}</code><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/RoQuest/api/Quest">Quest</a></code></div><div>
 <p>Constructor for Quest</p>
 <pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> appleQuest <span class="token operator">=</span> QuestLifeCycle<span class="token punctuation">.</span><span class="token function">new</span> <span class="token punctuation">{</span>
 	Name <span class="token operator">=</span> <span class="token string">"AppleQuest"</span><span class="token punctuation">,</span>
 <span class="token punctuation">}</span>
 </code></pre>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnInit"><code style="text-decoration:none">OnInit</code><a href="#OnInit" class="hash-link" aria-label="Direct link to OnInit" title="Direct link to OnInit">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L142"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnInit</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnInit"><code style="text-decoration:none">OnInit</code><a href="#OnInit" class="hash-link" aria-label="Direct link to OnInit" title="Direct link to OnInit">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L146"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnInit</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
 <p>Called when the quest object gets created.</p>
 <p>If the player just joined the game and the quest is already in progress it will still call OnInit!</p>
 <div class="admonition admonition-info alert alert--info">
@@ -144,7 +156,7 @@ end
     <p>This is a virtual method. Meaning you can override it in your lifecycle</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnStart"><code style="text-decoration:none">OnStart</code><a href="#OnStart" class="hash-link" aria-label="Direct link to OnStart" title="Direct link to OnStart">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L157"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnStart</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnStart"><code style="text-decoration:none">OnStart</code><a href="#OnStart" class="hash-link" aria-label="Direct link to OnStart" title="Direct link to OnStart">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L161"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnStart</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
 <p>Called when the player quest starts the quest</p>
 <div class="admonition admonition-info alert alert--info">
   <div class="admonition-heading">
@@ -156,7 +168,7 @@ end
     <p>This is a virtual method. Meaning you can override it in your lifecycle</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnComplete"><code style="text-decoration:none">OnComplete</code><a href="#OnComplete" class="hash-link" aria-label="Direct link to OnComplete" title="Direct link to OnComplete">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L172"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnComplete</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnComplete"><code style="text-decoration:none">OnComplete</code><a href="#OnComplete" class="hash-link" aria-label="Direct link to OnComplete" title="Direct link to OnComplete">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L176"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnComplete</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
 <p>Called when the quest gets completed</p>
 <div class="admonition admonition-info alert alert--info">
   <div class="admonition-heading">
@@ -168,7 +180,7 @@ end
     <p>This is a virtual method. Meaning you can override it in your lifecycle</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnDeliver"><code style="text-decoration:none">OnDeliver</code><a href="#OnDeliver" class="hash-link" aria-label="Direct link to OnDeliver" title="Direct link to OnDeliver">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L188"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnDeliver</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnDeliver"><code style="text-decoration:none">OnDeliver</code><a href="#OnDeliver" class="hash-link" aria-label="Direct link to OnDeliver" title="Direct link to OnDeliver">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L192"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnDeliver</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
 <p>
   Called when the quest gets delivered. Doesn't get called if the player joined the game
   and the quest was already delivered
@@ -183,7 +195,7 @@ end
     <p>This is a virtual method. Meaning you can override it in your lifecycle</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnObjectiveChange"><code style="text-decoration:none">OnObjectiveChange</code><a href="#OnObjectiveChange" class="hash-link" aria-label="Direct link to OnObjectiveChange" title="Direct link to OnObjectiveChange">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L206"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnObjectiveChange</code><code>(</code><div class="inset_uKQm"><div><code>_objectiveId<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>_newAmount<!-- -->: </code><code class="blue_P4bS">number</code></div></div><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnObjectiveChange"><code style="text-decoration:none">OnObjectiveChange</code><a href="#OnObjectiveChange" class="hash-link" aria-label="Direct link to OnObjectiveChange" title="Direct link to OnObjectiveChange">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L210"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnObjectiveChange</code><code>(</code><div class="inset_uKQm"><div><code>_objectiveId<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>_newAmount<!-- -->: </code><code class="blue_P4bS">number</code></div></div><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
 <p>Called when an objective of the quest gets updated</p>
 <div class="admonition admonition-info alert alert--info">
   <div class="admonition-heading">
@@ -195,7 +207,7 @@ end
     <p>This is a virtual method. Meaning you can override it in your lifecycle</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnDestroy"><code style="text-decoration:none">OnDestroy</code><a href="#OnDestroy" class="hash-link" aria-label="Direct link to OnDestroy" title="Direct link to OnDestroy">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L221"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnDestroy</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnDestroy"><code style="text-decoration:none">OnDestroy</code><a href="#OnDestroy" class="hash-link" aria-label="Direct link to OnDestroy" title="Direct link to OnDestroy">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/prooheckcp/RoQuest/blob/master/RoQuest/Shared/Classes/QuestLifeCycle.lua#L225"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>QuestLifeCycle<!-- -->:</code><code class="green_DgR4">OnDestroy</code><code>(</code><code>) → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code></div><div>
 <p>Called when the quest object gets destroyed. This happens when the player leaves the game or the quest gets removed</p>
 <div class="admonition admonition-info alert alert--info">
   <div class="admonition-heading">
@@ -227,7 +239,7 @@ end
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 125,
+                &quot;line&quot;: 129,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         },
@@ -243,7 +255,7 @@ end
             ],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 142,
+                &quot;line&quot;: 146,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         },
@@ -259,7 +271,7 @@ end
             ],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 157,
+                &quot;line&quot;: 161,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         },
@@ -275,7 +287,7 @@ end
             ],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 172,
+                &quot;line&quot;: 176,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         },
@@ -291,7 +303,7 @@ end
             ],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 188,
+                &quot;line&quot;: 192,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         },
@@ -318,7 +330,7 @@ end
             ],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 206,
+                &quot;line&quot;: 210,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         },
@@ -334,7 +346,7 @@ end
             ],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 221,
+                &quot;line&quot;: 225,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         }
@@ -345,7 +357,7 @@ end
             &quot;desc&quot;: &quot;The name of the lifecycle. This needs to be unique for each lifecycle&quot;,
             &quot;lua_type&quot;: &quot;string&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 96,
+                &quot;line&quot;: 100,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         },
@@ -354,7 +366,7 @@ end
             &quot;desc&quot;: &quot;A reference to the player to which this lifecycle is associated&quot;,
             &quot;lua_type&quot;: &quot;Player&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 103,
+                &quot;line&quot;: 107,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         },
@@ -363,23 +375,23 @@ end
             &quot;desc&quot;: &quot;A reference to the quest that this lifecycle is managing&quot;,
             &quot;lua_type&quot;: &quot;Quest&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 110,
+                &quot;line&quot;: 114,
                 &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
             }
         }
     ],
     &quot;types&quot;: [],
     &quot;name&quot;: &quot;QuestLifeCycle&quot;,
-    &quot;desc&quot;: &quot;QuestLifeCycles are classes that are used to give behavior to our quests. They get associated to a quest when it gets declared\nand will allow the developer to update world instances and other things when the quest is available, started, completed or delivered\n\n:::info\n\nThe lifecycle runs on the side where you injected it meaning that if you load a lifecycle in the server-side it will be\nmanaged by the server while if you inject it in the client it will be managed by the client\n\n:::\n\n```lua\nlocal appleQuest = QuestLifeCycle.new {\n\tName = \&quot;AppleQuest\&quot;,\n}\n\nfunction appleQuest:OnAvailable()\n\tprint(\&quot;AppleQuest is now available!\&quot;)\nend\n\nfunction appleQuest:OnStarted()\n\tprint(\&quot;AppleQuest has been started!\&quot;)\nend\n\nfunction appleQuest:OnCompleted()\n\tprint(\&quot;AppleQuest has been completed!\&quot;)\nend\n\nfunction appleQuest:OnDelivered()\n\tprint(\&quot;AppleQuest has been delivered!\&quot;)\nend\n\nfunction appleQuest:OnObjectiveChanged(objectiveId: string, newAmount: number)\n\tprint(\&quot;Objective \&quot; .. objectiveId .. \&quot; has been updated to \&quot; .. newAmount)\nend\n```&quot;,
+    &quot;desc&quot;: &quot;QuestLifeCycles are classes that are used to give behavior to our quests. They get associated to a quest when it gets declared\nand will allow the developer to update world instances and other things when the quest is available, started, completed or delivered\n\n:::info\n\nThe lifecycle runs on the side where you injected it meaning that if you load a lifecycle in the server-side it will be\nmanaged by the server while if you inject it in the client it will be managed by the client\n\n:::\n\n```lua\nlocal appleQuest = QuestLifeCycle.new {\n\tName = \&quot;AppleQuest\&quot;,\n}\n\nfunction appleQuest:OnInit()\n\tprint(\&quot;AppleQuest OnInit\&quot;)\nend\n\nfunction appleQuest:OnStart()\n\tprint(\&quot;AppleQuest has been started!\&quot;)\nend\n\nfunction appleQuest:OnComplete()\n\tprint(\&quot;AppleQuest has been completed!\&quot;)\nend\n\nfunction appleQuest:OnDeliver()\n\tprint(\&quot;AppleQuest has been delivered!\&quot;)\nend\n\nfunction appleQuest:OnObjectiveChange(objectiveId: string, newAmount: number)\n\tprint(\&quot;Objective \&quot; .. objectiveId .. \&quot; has been updated to \&quot; .. newAmount)\nend\n\nfunction appleQuest:OnDestroy()\n\tprint(\&quot;AppleQuest has been destroyed!\&quot;)\nend\n```&quot;,
     &quot;tags&quot;: [
         &quot;Class&quot;
     ],
     &quot;source&quot;: {
-        &quot;line&quot;: 86,
+        &quot;line&quot;: 90,
         &quot;path&quot;: &quot;RoQuest/Shared/Classes/QuestLifeCycle.lua&quot;
     }
 }</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a><ul><li><a href="#Name" class="table-of-contents__link toc-highlight">Name</a></li><li><a href="#Player" class="table-of-contents__link toc-highlight">Player</a></li><li><a href="#Quest" class="table-of-contents__link toc-highlight">Quest</a></li></ul></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#OnComplete" class="table-of-contents__link toc-highlight">:OnComplete</a></li><li><a href="#OnDeliver" class="table-of-contents__link toc-highlight">:OnDeliver</a></li><li><a href="#OnDestroy" class="table-of-contents__link toc-highlight">:OnDestroy</a></li><li><a href="#OnInit" class="table-of-contents__link toc-highlight">:OnInit</a></li><li><a href="#OnObjectiveChange" class="table-of-contents__link toc-highlight">:OnObjectiveChange</a></li><li><a href="#OnStart" class="table-of-contents__link toc-highlight">:OnStart</a></li><li><a href="#new" class="table-of-contents__link toc-highlight">.new</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 prooheckcp. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/RoQuest/assets/js/runtime~main.a0c6196b.js"></script>
-<script src="/RoQuest/assets/js/main.7bf77c46.js"></script>
+<script src="/RoQuest/assets/js/runtime~main.bf1ca6a3.js"></script>
+<script src="/RoQuest/assets/js/main.a8ad7f1f.js"></script>
 </body>
 </html>
