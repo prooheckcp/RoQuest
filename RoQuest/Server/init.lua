@@ -538,6 +538,8 @@ RoQuestServer._LifeCycles = {} :: {[Player]: {[string]: {[string]: QuestLifeCycl
 
 	@server
 	@private
+	@prop _LoadedChache {[Player]: true?}
+	@within RoQuestServer
 ]=]
 RoQuestServer._LoadedChache = {} :: {[Player]: true?}
 
@@ -1675,7 +1677,7 @@ end
 	@server
 	@private
 
-	@parma player Player
+	@param player Player
 	@param questId string
 	@param questProgress QuestProgress?
 
