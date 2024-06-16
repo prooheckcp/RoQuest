@@ -5,27 +5,46 @@ local DataStoreService = game:GetService("DataStoreService")
 local RoQuest = require(ReplicatedStorage.RoQuest).Server
 
 local questsStore = DataStoreService:GetDataStore("PlayerQuests")
+local PlayerQuestData = RoQuest.PlayerQuestData
 
 RoQuest:Init(
     RoQuest:LoadDirectory(ReplicatedStorage.Quests), 
     RoQuest:LoadDirectory(ReplicatedStorage.LifeCycles.Server)
 )
 
+
+RoQuest.OnUnAvailableQuestChanged:Connect(function(...)
+    print("Unavailable Changed", ...)
+end)
+RoQuest.OnAvailableQuestChanged:Connect(function(...)
+    print("Available Changed", ...)
+end)
+RoQuest.OnCompletedQuestChanged:Connect(function(...)
+    print("Completed Changed", ...)
+end)
+RoQuest.OnDeliveredQuestChanged:Connect(function(...)
+    print("Delivered Changed", ...)
+end)
+RoQuest.OnInProgressQuestChanged:Connect(function(...)
+    print("In Progress Changed", ...)
+end)
+
+
+
 RoQuest.OnStart():andThen(function()
     local function playerAdded(player: Player)
-        local success, playerData = pcall(function()
+        local _success, playerData = pcall(function()
             return questsStore:GetAsync("player_"..player.UserId)
         end)
-        
-        print("Joined", playerData)
-
-        task.delay(1, function()
-            print("After 1 sec", RoQuest:GetPlayerData(player))
-        end)
-
+   
+  
         if playerData then -- Set the data on RoQuest
-            --RoQuest:SetPlayerData(player, playerData)
-        end
+            task.delay(2, function()
+                print("[test] Before Set", RoQuest:GetPlayerData(player))
+                RoQuest:SetPlayerData(player, playerData)
+                print("[test] After Set", RoQuest:GetPlayerData(player))
+            end)
+        end        
     end
     
     local function playerRemoved(player: Player)

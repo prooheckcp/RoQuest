@@ -196,6 +196,25 @@ RoQuestClient.OnQuestCancelled = Signal.new() -- Event(questId: string)
 ]=]
 RoQuestClient.OnQuestAvailable = Signal.new()
 --[=[
+	This gets called when a quest becomes unavailable. Usually only happens when a quest
+	gets disabled at run-time or when the quest's end time has passed 
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest.OnQuestUnavailable:Connect(function(questId: string)
+		print("The player's quest has just been cancelled: ", RoQuest:GetStaticQuest(questId).Name)
+	end)
+	```
+
+	@client
+	@prop OnQuestUnavailable Signal
+	@within RoQuestClient
+]=]
+RoQuestClient.OnQuestUnavailable = Signal.new()
+--[=[
 	This gets called whenever the quests that are unavailable changes.
 	This means that either a quest just became available OR that a quest became
 	unavailable (such as a quest with an end time)
@@ -511,7 +530,6 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 	end
 
 	self:_OnPlayerDataChanged(net:Call("GetPlayerData"):Await())
-
 	net:On("OnPlayerDataChanged", function(playerQuestData: PlayerQuestData)
 		self:_OnPlayerDataChanged(playerQuestData)
 	end)
@@ -959,8 +977,9 @@ end
 	@return ()
 ]=]
 function RoQuestClient:_OnPlayerDataChanged(playerQuestData: PlayerQuestData)
+	self._Quests = {}
 	self._PlayerQuestData = playerQuestData
-
+	
 	for questId: string, questProgress: QuestProgress in playerQuestData.InProgress do
 		self:_GiveQuest(questId, questProgress)
 	end
@@ -1129,6 +1148,8 @@ function RoQuestClient:_ChangeAvailableState(questId: string, state: true?): ()
 
 	if state then
 		self.OnQuestAvailable:Fire(questId)
+	else
+		self.OnQuestUnavailable:Fire(questId)
 	end
 end
 
@@ -1276,7 +1297,9 @@ function RoQuestClient:_GiveQuest(questId: string, questProgress: QuestProgress?
 	self:_ChangeDeliveredQuest(questId, nil)
 	
 	self._Quests[questId] = questClone
-	self:_ChangeInProgressQuest(questId, questClone:_GetQuestProgress())
+	if STATUS_CHANGED_REFERENCE[questClone:GetQuestStatus()] then
+		self[STATUS_CHANGED_REFERENCE[questClone:GetQuestStatus()]](self, questId, questClone:_GetQuestProgress())
+	end
 
 	return true
 end

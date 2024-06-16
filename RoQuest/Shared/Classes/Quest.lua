@@ -61,6 +61,19 @@ local Quest = {}
 Quest.__index = Quest
 Quest.__type = "Quest"
 --[=[
+    Called whenever a quest objective gets completed
+
+    ```lua
+    quest.OnQuestObjectiveCompleted:Connect(function(objectiveId: string)
+        print("Completed Objective: " .. objectiveId)
+    end)
+    ```
+
+    @prop OnQuestObjectiveCompleted Signal
+    @within Quest
+]=]
+Quest.OnQuestObjectiveCompleted = newproxy() :: Signal
+--[=[
     Called whenever one of the quests objective changes the value
 
     ```lua
@@ -265,6 +278,7 @@ Quest._Trove = newproxy() :: Trove
 function Quest.new(properties: {[string]: any}): Quest
     properties = properties or {}
     local self: Quest = assertProperties(properties, Quest)
+    self.OnQuestObjectiveCompleted = Signal.new()
     self.OnQuestObjectiveChanged = Signal.new()
     self.OnQuestCompleted = Signal.new()
     self.OnQuestDelivered = Signal.new()
@@ -288,6 +302,8 @@ function Quest.new(properties: {[string]: any}): Quest
         LastCompletedTick = 0,
     })
     self._Trove = Trove.new()
+    self._Trove:Add(self.OnQuestObjectiveCompleted)
+    self._Trove:Add(self.OnQuestObjectiveChanged)
     self._Trove:Add(self.OnQuestCompleted)
     self._Trove:Add(self.OnQuestDelivered)
     self._Trove:Add(self.OnQuestCanceled)
@@ -304,7 +320,7 @@ end
     @return boolean
 ]=]
 function Quest:IsObjectiveCompleted(objectiveId: string): boolean
-    return self:GetObjective(objectiveId) == self:GetTargetObjective()
+    return self:GetObjective(objectiveId) == self:GetTargetObjective(objectiveId)
 end
 
 --[=[
@@ -375,7 +391,29 @@ end
     @return number
 ]=]
 function Quest:GetTimeForAvailable(): number
-    return math.max(0, workspace:GetServerTimeNow() - self:GetQuestStart())
+    local serverTime: number = workspace:GetServerTimeNow()
+
+    if serverTime < self:GetQuestStart() then
+        return self:GetQuestStart() - serverTime
+    end
+
+    return 0
+end
+
+--[=[
+    Will return how long until the quest becomes unavailable.
+    It will return 0 if it is already unavailable
+    
+    @return number
+]=]
+function Quest:GetTimeForUnavailable(): number
+    local serverTime: number = workspace:GetServerTimeNow()
+
+    if serverTime < self:GetQuestEnd() then
+        return self:GetQuestEnd() - serverTime
+    end
+
+    return 0
 end
 
 --[=[
@@ -444,7 +482,7 @@ function Quest:GetObjective(objectiveId: number): number
 end
 
 --[=[
-    Gets teh target objective by the id
+    Gets the target objective by the id
 
     @param objectiveId string
 
@@ -458,6 +496,40 @@ function Quest:GetTargetObjective(objectiveId: string): number
     end
 
     return questObjective:GetTargetProgress()
+end
+
+--[=[
+    Returns a number with the amount of objectives that exist within
+    this quest
+
+    @return number
+]=]
+function Quest:GetQuestObjectivesCount(): number
+    local counter: number = 0
+
+    for _ in self:GetQuestObjectives() do
+        counter += 1
+    end
+
+    return counter
+end
+
+--[=[
+    Returns a number with the amount of **completed** objectives that exist within
+    this quest
+    
+    @return number
+]=]
+function Quest:GetQuestObjectivesCompletedCount(): number
+    local counter: number = 0
+
+    for _, questObjective: QuestObjective in self:GetQuestObjectives() do
+        if questObjective:IsCompleted() then
+            counter += 1
+        end
+    end
+
+    return counter
 end
 
 --[=[
@@ -564,6 +636,7 @@ function Quest:_SetQuestProgress(newQuestProgress: QuestProgress): ()
         newQuestObjective._QuestObjectiveProgress = questObjectiveProgress
 
         newQuestObjective.Completed:Connect(function()
+            self.OnQuestObjectiveCompleted:Fire(objectiveId)
             self:_CheckProgress()
         end)
 
