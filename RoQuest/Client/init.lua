@@ -979,7 +979,7 @@ end
 function RoQuestClient:_OnPlayerDataChanged(playerQuestData: PlayerQuestData)
 	self._Quests = {}
 	self._PlayerQuestData = playerQuestData
-	print("[test] On Data Changed: ", playerQuestData)
+	
 	for questId: string, questProgress: QuestProgress in playerQuestData.InProgress do
 		self:_GiveQuest(questId, questProgress)
 	end
@@ -991,7 +991,7 @@ function RoQuestClient:_OnPlayerDataChanged(playerQuestData: PlayerQuestData)
 	for questId: string, questProgress: QuestProgress in playerQuestData.Delivered do
 		self:_GiveQuest(questId, questProgress)
 	end
-	
+
 	self.OnPlayerDataChanged:Fire(playerQuestData)
 end
 

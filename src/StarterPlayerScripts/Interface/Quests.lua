@@ -52,7 +52,7 @@ end
 
 function Quests:UpdateInterface()
     local quests: {[string]: Quest} = RoQuest:GetInProgressQuests()
-
+  
     for _, instance: Instance in scrollingFrame:GetChildren() do -- Delete quests that dont exit
         if instance:IsA("Frame") and not quests[instance.Name] then
             instance:Destroy()
@@ -63,8 +63,7 @@ function Quests:UpdateInterface()
         local existingFrame: Frame = scrollingFrame:FindFirstChild(questId)
 
         if existingFrame then
-            self:UpdateQuestFrame(quest, existingFrame)
-            continue -- Quest already exists
+            existingFrame:Destroy()
         end
 
         local newTemplate: Frame = template:Clone()
@@ -88,6 +87,10 @@ function Quests:UpdateInterface()
 end
 
 function Quests:Init()
+    RoQuest.OnPlayerDataChanged:Connect(function()
+        self:UpdateInterface()
+    end)
+
     RoQuest.OnInProgressQuestChanged:Connect(function()
         self:UpdateInterface()
     end)

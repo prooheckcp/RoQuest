@@ -40,9 +40,9 @@ RoQuest.OnStart():andThen(function()
   
         if playerData then -- Set the data on RoQuest
             task.delay(2, function()
-                print("[test] Before Set", RoQuest:GetQuests(player))
+                print("[test] Before Set", RoQuest:GetPlayerData(player))
                 RoQuest:SetPlayerData(player, playerData)
-                print("[test] After Set", RoQuest:GetQuests(player))
+                print("[test] After Set", RoQuest:GetPlayerData(player))
             end)
         end        
     end
