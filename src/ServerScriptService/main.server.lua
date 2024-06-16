@@ -12,7 +12,7 @@ RoQuest:Init(
     RoQuest:LoadDirectory(ReplicatedStorage.LifeCycles.Server)
 )
 
---[[
+
 RoQuest.OnUnAvailableQuestChanged:Connect(function(...)
     print("Unavailable Changed", ...)
 end)
@@ -28,7 +28,7 @@ end)
 RoQuest.OnInProgressQuestChanged:Connect(function(...)
     print("In Progress Changed", ...)
 end)
-]]
+
 
 
 RoQuest.OnStart():andThen(function()
