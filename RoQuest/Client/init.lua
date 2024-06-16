@@ -530,7 +530,6 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 	end
 
 	self:_OnPlayerDataChanged(net:Call("GetPlayerData"):Await())
-
 	net:On("OnPlayerDataChanged", function(playerQuestData: PlayerQuestData)
 		self:_OnPlayerDataChanged(playerQuestData)
 	end)
@@ -980,7 +979,7 @@ end
 function RoQuestClient:_OnPlayerDataChanged(playerQuestData: PlayerQuestData)
 	self._Quests = {}
 	self._PlayerQuestData = playerQuestData
-
+	print("[test] On Data Changed: ", playerQuestData)
 	for questId: string, questProgress: QuestProgress in playerQuestData.InProgress do
 		self:_GiveQuest(questId, questProgress)
 	end
@@ -992,7 +991,7 @@ function RoQuestClient:_OnPlayerDataChanged(playerQuestData: PlayerQuestData)
 	for questId: string, questProgress: QuestProgress in playerQuestData.Delivered do
 		self:_GiveQuest(questId, questProgress)
 	end
-
+	
 	self.OnPlayerDataChanged:Fire(playerQuestData)
 end
 
@@ -1298,7 +1297,9 @@ function RoQuestClient:_GiveQuest(questId: string, questProgress: QuestProgress?
 	self:_ChangeDeliveredQuest(questId, nil)
 	
 	self._Quests[questId] = questClone
-	self:_ChangeInProgressQuest(questId, questClone:_GetQuestProgress())
+	if STATUS_CHANGED_REFERENCE[questClone:GetQuestStatus()] then
+		self[STATUS_CHANGED_REFERENCE[questClone:GetQuestStatus()]](self, questId, questClone:_GetQuestProgress())
+	end
 
 	return true
 end

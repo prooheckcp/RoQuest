@@ -38,6 +38,12 @@ type Trove = Trove.Trove
 
 -- We want to give enough time for developers to get and save their player data
 local DATA_RELEASE_DELAY: number = 5
+local WAITING_TIMEOUT: number = 5
+local STATUS_CHANGED_REFERENCE: {[QuestStatus]: string} = {
+	[QuestStatus.InProgress] = "_ChangeInProgressQuest",
+	[QuestStatus.Completed] = "_ChangeCompletedQuest",
+	[QuestStatus.Delivered] = "_ChangeDeliveredQuest",
+}
 
 --[=[
 	@class RoQuestServer
@@ -242,6 +248,104 @@ RoQuestServer.OnQuestAvailable = Signal.new()
 ]=]
 RoQuestServer.OnQuestUnavailable = Signal.new() -- Event (player: Player, questId: string)
 --[=[
+	This gets called whenever the quests that are unavailable changes.
+	This means that either a quest just became available OR that a quest became
+	unavailable (such as a quest with an end time)
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest.OnUnAvailableQuestChanged:Connect(function(player: Player)
+		print(self:GetUnAvailableQuests(player))
+	end)
+	```
+
+	@server
+	@prop OnUnAvailableQuestChanged Signal
+	@within RoQuestServer
+]=]
+RoQuestServer.OnUnAvailableQuestChanged = Signal.new()
+--[=[
+	This gets called whenever the quests that are available changes.
+	Called when one of the available quests becomes unavailable or when a quest
+	gets started by the player
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest.OnAvailableQuestChanged:Connect(function(player: Player)
+		print(self:GetAvailableQuests(player))
+	end)
+	```
+
+	@server
+	@prop OnAvailableQuestChanged Signal
+	@within RoQuestServer
+]=]
+RoQuestServer.OnAvailableQuestChanged = Signal.new()
+--[=[
+	This gets called whenever the quests that are completed changes.
+	This gets called when either a quest got delivered, a quest just got completed
+	or somehow the quest got cancelled while completed
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest.OnCompletedQuestChanged:Connect(function(player: Player)
+		print(self:GetCompletedQuests(player))
+	end)
+	```
+
+	@server
+	@prop OnCompletedQuestChanged Signal
+	@within RoQuestServer
+]=]
+RoQuestServer.OnCompletedQuestChanged = Signal.new()
+--[=[
+	This gets called whenever the quests that are delivered changes.
+	This gets called when either a quest got delivered or a delivered quest gets restarted
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest.OnDeliveredQuestChanged:Connect(function(player: Player)
+		print(self:GetDeliveredQuests(player))
+	end)
+	```
+
+	@server
+	@prop OnDeliveredQuestChanged Signal
+	@within RoQuestServer
+]=]
+RoQuestServer.OnDeliveredQuestChanged = Signal.new()
+--[=[
+	This gets called whenever the quests that are in progress change.
+	This gets called when either a quest got completed or started by the player
+
+	```lua
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+	local RoQuest = require(ReplicatedStorage.RoQuest).Server
+
+	RoQuest.OnInProgressQuestChanged:Connect(function(player: Player)
+		print(self:GetInProgressQuests(player))
+	end)
+	```
+
+	@server
+	@prop OnInProgressQuestChanged Signal
+	@within RoQuestServer
+]=]
+RoQuestServer.OnInProgressQuestChanged = Signal.new()
+--[=[
 	This is a reference to our PlayerQuestData struct
 
 	@server
@@ -429,6 +533,15 @@ RoQuestServer._Troves = {} :: {[Player]: Trove}
 RoQuestServer._LifeCycles = {} :: {[Player]: {[string]: {[string]: QuestLifeCycle}}}
 
 --[=[
+	Caches whether a player has already loaded at least once or not
+	This allows us to properly wait for a player and avoid racing conditions
+
+	@server
+	@private
+]=]
+RoQuestServer._LoadedChache = {} :: {[Player]: true?}
+
+--[=[
 	This is one of the most important methods of this Module. It is used
 	to ensure that your code is only called **after** the RoQuestServer has been initiated.
 
@@ -567,7 +680,6 @@ function RoQuestServer:Init(quests: {Quest}, lifeCycles: {QuestLifeCycle}?): ()
 
 		return RoQuestServer._UnavailableQuests[player]
 	end)
-
 
 	Players.PlayerAdded:Connect(function(player: Player)
 		self:_PlayerAdded(player)
@@ -721,7 +833,9 @@ end
 	@return Quest?
 ]=]
 function RoQuestServer:GetQuest(player: Player, questId: string): Quest?
-	return self._Quests[player][questId]
+	self:_WaitForPlayerToLoad(player)
+
+	return self:_GetQuest(player, questId)
 end
 
 --[=[
@@ -749,6 +863,8 @@ end
 	@return {[string]: Quest} -- <questId: string, quest: Quest>
 ]=]
 function RoQuestServer:GetQuests(player: Player): {[string]: Quest}
+	self:_WaitForPlayerToLoad(player)
+
 	return self._Quests[player] or {}
 end
 
@@ -772,9 +888,11 @@ end
 	@return {[string]: Quest} -- <questId: string, quest: Quest>
 ]=]
 function RoQuestServer:GetCompletedQuests(player: Player): {[string]: Quest}
+	self:_WaitForPlayerToLoad(player)
+
 	local quests: {[string]: Quest} = {}
 
-	for questId: string in self:GetPlayerData(player).Completed do
+	for questId: string in self:_GetPlayerData(player).Completed do
 		quests[questId] = self:GetQuest(player, questId)
 	end
 
@@ -801,13 +919,9 @@ end
 	@return {[string]: Quest} -- <questId: string, quest: Quest>
 ]=]
 function RoQuestServer:GetDeliveredQuests(player: Player): {[string]: Quest}
-	local quests: {[string]: Quest} = {}
+	self:_WaitForPlayerToLoad(player)
 
-	for questId: string in self:GetPlayerData(player).Delivered do
-		quests[questId] = self:GetQuest(player, questId)
-	end
-
-	return quests
+	return self:_GetDeliveredQuests(player)
 end
 
 --[=[
@@ -830,9 +944,11 @@ end
 	@return {[string]: Quest} -- <questId: string, quest: Quest>
 ]=]
 function RoQuestServer:GetInProgressQuests(player: Player): {[string]: Quest}
+	self:_WaitForPlayerToLoad(player)
+
 	local quests: {[string]: Quest} = {}
 
-	for questId: string in self:GetPlayerData(player).InProgress do
+	for questId: string in self:_GetPlayerData(player).InProgress do
 		quests[questId] = self:GetQuest(player, questId)
 	end
 
@@ -859,6 +975,8 @@ end
 	@return {[string]: Quest} -- <questId: string, quest: Quest>
 ]=]
 function RoQuestServer:GetAvailableQuests(player: Player): {[string]: Quest}
+	self:_WaitForPlayerToLoad(player)
+
 	local quests: {[string]: Quest} = {}
 
 	for questId: string in self._AvailableQuests[player] do
@@ -888,6 +1006,8 @@ end
 	@return {[string]: Quest} -- <questId: string, quest: Quest>
 ]=]
 function RoQuestServer:GetUnAvailableQuests(player: Player): {[string]: Quest}
+	self:_WaitForPlayerToLoad(player)
+
 	local quests: {[string]: Quest} = {}
 
 	for questId: string in self._UnavailableQuests[player] do
@@ -956,7 +1076,9 @@ end
 	@return PlayerQuestData
 ]=]
 function RoQuestServer:GetPlayerData(player: Player): PlayerQuestData
-	return self._PlayerQuestData[player] or PlayerQuestData {}
+	self:_WaitForPlayerToLoad(player)
+
+	return self:_GetPlayerData(player)
 end
 
 --[=[
@@ -980,6 +1102,8 @@ end
 	@return number
 ]=]
 function RoQuestServer:GetObjective(player: Player, questId: string, objectiveId: string): number
+	self:_WaitForPlayerToLoad(player)
+
 	local quest: Quest? = self:GetQuest(player, questId)
 
 	if not quest then
@@ -1010,6 +1134,8 @@ end
 	@return ()
 ]=]
 function RoQuestServer:AddObjective(player: Player, objectiveId: string, amount: number): ()
+	self:_WaitForPlayerToLoad(player)
+
 	if not self._PlayerQuestData[player] then
 		return
 	end
@@ -1048,6 +1174,8 @@ end
 	@return ()
 ]=]
 function RoQuestServer:SetObjective(player: Player, objectiveId: string, amount: number): ()
+	self:_WaitForPlayerToLoad(player)
+
 	if not self._PlayerQuestData[player] then
 		return
 	end
@@ -1084,6 +1212,8 @@ end
 	@return ()
 ]=]
 function RoQuestServer:RemoveObjective(player: Player, objectiveId: string, amount: number): ()
+	self:_WaitForPlayerToLoad(player)
+
 	if not self._PlayerQuestData[player] then
 		return
 	end
@@ -1155,6 +1285,8 @@ end
 	@return boolean -- If it managed to complete the quest or not
 ]=]
 function RoQuestServer:CompleteQuest(player: Player, questId: string): boolean
+	self:_WaitForPlayerToLoad(player)
+
 	local quest: Quest? = self:GetQuest(player, questId)
 
 	if not quest then
@@ -1185,6 +1317,8 @@ end
 	@return boolean -- If it managed to deliver the quest or not
 ]=]
 function RoQuestServer:DeliverQuest(player: Player, questId: string)
+	self:_WaitForPlayerToLoad(player)
+
 	local quest: Quest? = self:GetQuest(player, questId)
 
 	if not quest then
@@ -1215,6 +1349,8 @@ end
 	@return boolean -- If it managed to cancel the quest or not
 ]=]
 function RoQuestServer:CancelQuest(player: Player, questId: string): boolean
+	self:_WaitForPlayerToLoad(player)
+
 	local quest: Quest? = self:GetQuest(player, questId)
 
 	if not quest or quest:GetQuestStatus() == QuestStatus.Delivered then
@@ -1223,7 +1359,9 @@ function RoQuestServer:CancelQuest(player: Player, questId: string): boolean
 
 	quest.OnQuestCanceled:Fire()
 	self._Quests[player][questId] = nil
-	self._PlayerQuestData[player][quest:GetQuestStatus()][questId] = nil
+	if STATUS_CHANGED_REFERENCE[quest:GetQuestStatus()] then
+		self[STATUS_CHANGED_REFERENCE[quest:GetQuestStatus()]](self, questId, nil)
+	end
 	quest:Destroy()
 	self.OnQuestCancelled:Fire(player, questId)
 	task.defer(self._NewPlayerAvailableQuest, self, player, questId)
@@ -1263,13 +1401,13 @@ function RoQuestServer:CanGiveQuest(player: Player, questId: string): boolean
 		return false
 	end
 
-	local currentQuest: Quest? = self:GetQuest(player, questId)
+	local currentQuest: Quest? = self:_GetQuest(player, questId)
 	for _, requiredQuestId: string in quest.RequiredQuests do
 		if not self._PlayerQuestData[player].Delivered[requiredQuestId] then
 			return false
 		end
 
-		local requiredQuest: Quest? = self:GetQuest(player, requiredQuestId)
+		local requiredQuest: Quest? = self:_GetQuest(player, requiredQuestId)
 
 		if 
 			currentQuest and 
@@ -1302,6 +1440,8 @@ end
 	@return ()
 ]=]
 function RoQuestServer:MakeQuestAvailable(player: Player, questId: string): ()
+	self:_WaitForPlayerToLoad(player)
+
 	local quest: Quest? = self:GetQuest(player, questId)
 
 	if not quest or quest:GetQuestStatus() ~= QuestStatus.Delivered then
@@ -1332,6 +1472,8 @@ end
 	@return QuestStatus
 ]=]
 function RoQuestServer:GetQuestStatus(player: Player, questId: string): QuestStatus
+	self:_WaitForPlayerToLoad(player)
+
 	local quest: Quest? = self:GetQuest(player, questId)
 
 	if not quest then
@@ -1376,8 +1518,8 @@ function RoQuestServer:_QuestCompleted(player: Player, questId: string): ()
 		return
 	end
 
-	self._PlayerQuestData[player].InProgress[questId] = nil
-	self._PlayerQuestData[player].Completed[questId] = quest:_GetQuestProgress()
+	self:_ChangeInProgressQuest(player, questId, nil)
+	self:_ChangeCompletedQuest(player, questId, quest:_GetQuestProgress())
 end
 
 --[=[
@@ -1397,8 +1539,8 @@ function RoQuestServer:_QuestDelivered(player: Player, questId: string): ()
 		return
 	end
 
-	self._PlayerQuestData[player].Completed[questId] = nil
-	self._PlayerQuestData[player].Delivered[questId] = quest:_GetQuestProgress()
+	self:_ChangeCompletedQuest(player, questId, nil)
+	self:_ChangeDeliveredQuest(player, questId, quest:_GetQuestProgress())
 
 	if self._RequiredQuestPointer[questId] then
 		for requiredQuestId: string in self._RequiredQuestPointer[questId] do
@@ -1427,8 +1569,15 @@ end
 	@return ()
 ]=]
 function RoQuestServer:_WaitForPlayerToLoad(player: Player): ()
-	while not self._PlayerQuestData[player] and player.Parent == Players do -- Wait for player to load
-		task.wait()
+	local timer: number = 0
+
+	while not self._LoadedChache[player] and player.Parent == Players do -- Wait for player to load
+		timer += task.wait()
+
+		if timer > WAITING_TIMEOUT then
+			warn(WarningMessages.WaitForLoad:format(debug.traceback()))
+			break
+		end
 	end
 end
 
@@ -1479,6 +1628,111 @@ function RoQuestServer:_QuestBecameUnavailable(questId: string): ()
 end
 
 --[=[
+	Called whenever we need to update the status of a quest that was available
+
+	@server
+	@private
+
+	@param player Player
+	@param questId string
+	@param state true?
+
+	@return ()
+]=]
+function RoQuestServer:_ChangeAvailableState(player: Player, questId: string, state: true?): ()
+	if not self._AvailableQuests[player] or self._AvailableQuests[player][questId] == state then
+		return
+	end
+
+	self._AvailableQuests[player][questId] = state
+	self.OnAvailableQuestChanged:Fire(player, questId, state)
+end
+
+--[=[
+	Called whenever we need to update the status of a quest that was unavailable
+
+	@server
+	@private
+
+	@param player Player
+	@param questId string
+	@param state true?
+
+	@return ()
+]=]
+function RoQuestServer:_ChangeUnAvailableState(player: Player, questId: string, state: true?): ()
+	if not self._UnavailableQuests[player] or self._UnavailableQuests[player][questId] == state then
+		return
+	end
+
+	self._UnavailableQuests[player][questId] = state
+	self.OnUnAvailableQuestChanged:Fire(player, questId, state)
+end
+
+--[=[
+	Called whenever we need to update the progress of a quest that was completed
+
+	@server
+	@private
+
+	@parma player Player
+	@param questId string
+	@param questProgress QuestProgress?
+
+	@return ()
+]=]
+function RoQuestServer:_ChangeCompletedQuest(player: Player, questId: string, questProgress: QuestProgress?): ()
+	if not self._PlayerQuestData[player] or self._PlayerQuestData[player].Completed[questId] == questProgress then
+		return
+	end
+
+	self._PlayerQuestData[player].Completed[questId] = questProgress
+	self.OnCompletedQuestChanged:Fire(player, questId)
+end
+
+--[=[
+	Called whenever we need to update the progress of a quest that was delivered
+
+	@server
+	@private
+
+	@param player Player
+	@param questId string
+	@param questProgress QuestProgress?
+
+	@return ()
+]=]
+function RoQuestServer:_ChangeDeliveredQuest(player: Player, questId: string, questProgress: QuestProgress?): ()
+	if not self._PlayerQuestData[player] or self._PlayerQuestData[player].Delivered[questId] == questProgress then
+		return
+	end
+
+	self._PlayerQuestData[player].Delivered[questId] = questProgress
+	self.OnDeliveredQuestChanged:Fire(player, questId)
+end
+
+--[=[
+	Called whenever we need to update the progress of a quest that is in progress
+
+	@server
+	@private
+
+	@param player Player
+	@param questId string
+	@param questProgress QuestProgress?
+
+	@return ()
+]=]
+function RoQuestServer:_ChangeInProgressQuest(player: Player, questId: string, questProgress: QuestProgress?): ()
+	if not self._PlayerQuestData[player] or self._PlayerQuestData[player].InProgress[questId] == questProgress then
+		return
+	end
+
+	self._PlayerQuestData[player].InProgress[questId] = questProgress
+	self.OnInProgressQuestChanged:Fire(player, questId)
+end
+
+--[=[
 	If possible we'll give the quest to the player
 
 	@server
@@ -1490,6 +1744,10 @@ end
 	@return boolean -- If it managed to give the quest to the player or not
 ]=]
 function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress: QuestProgress?): boolean
+	while not self._PlayerQuestData[player] and player.Parent == Players do -- Wait for player to load
+		task.wait()
+	end
+
 	if not self:CanGiveQuest(player, questId) then
 		return false
 	end
@@ -1519,7 +1777,7 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 	end
 
 	if not questProgress then
-		local quest: Quest? = self:GetQuest(player, questId)
+		local quest: Quest? = self:_GetQuest(player, questId)
 
 		if quest then -- We are repeating the quest!!!
 			questProgress = quest:_GetQuestProgress()
@@ -1546,18 +1804,64 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 		})
 	end
 
-
-	self._AvailableQuests[player][questId] = nil
+	self:_ChangeAvailableState(player, questId, nil)
 	self._Quests[player][questId] = questClone
-	self._PlayerQuestData[player].Delivered[questId] = nil
-	self._PlayerQuestData[player][questClone:GetQuestStatus()][questId] = questClone:_GetQuestProgress()
+	self:_ChangeDeliveredQuest(player, questId, nil)
+	if STATUS_CHANGED_REFERENCE[questClone:GetQuestStatus()] then
+		self[STATUS_CHANGED_REFERENCE[questClone:GetQuestStatus()]](self, player, questId, questClone:_GetQuestProgress())
+	end
 	self._Troves[player]:Add(questClone)
-
 	for _, lifeCycleName: string in questClone.LifeCycles do
 		self:_CreateLifeCycle(player, questClone, lifeCycleName)
 	end
 
 	return true
+end
+
+--[=[
+	Gets the delivered quests from the player and returns them
+
+	@private
+	@server
+	@param player Player
+
+	@return {[string]: Quest}
+]=]
+function RoQuestServer:_GetDeliveredQuests(player: Player): {[string]: Quest}
+	local quests: {[string]: Quest} = {}
+
+	for questId: string in self:_GetPlayerData(player).Delivered do
+		quests[questId] = self:GetQuest(player, questId)
+	end
+
+	return quests
+end
+
+--[=[
+	Gets the given quest from the player
+
+	@private
+	@server
+	@param player Player
+	@param questId string
+
+	@return Quest?
+]=]
+function RoQuestServer:_GetQuest(player: Player, questId: string): Quest?
+	return self._Quests[player][questId]
+end
+
+--[=[
+	Gets the player data
+
+	@private
+	@server
+	@param player Player
+
+	@return PlayerQuestData
+]=]
+function RoQuestServer:_GetPlayerData(player: Player): PlayerQuestData
+	return self._PlayerQuestData[player] or PlayerQuestData {}
 end
 
 --[=[
@@ -1572,8 +1876,8 @@ end
 function RoQuestServer:_LoadPlayerData(player: Player): ()
 	self._Quests[player] = {} -- Reset our player quest
 	self._Troves[player]:Clean()
-	
-	for _questStatus, questArray: {[string]: QuestProgress} in self:GetPlayerData(player) do
+
+	for _questStatus, questArray: {[string]: QuestProgress} in self._PlayerQuestData[player] do
 		for questId: string, questProgress: QuestProgress in questArray do
 			self:_GiveQuest(player, questId, questProgress)
 		end
@@ -1583,7 +1887,7 @@ function RoQuestServer:_LoadPlayerData(player: Player): ()
 		self:_NewPlayerAvailableQuest(player, questId)
 	end
 
-	for _, quest: Quest in self:GetDeliveredQuests(player) do
+	for _, quest: Quest in self:_GetDeliveredQuests(player) do
 		if quest.QuestRepeatableType ~= QuestRepeatableType.NonRepeatable then
 			local timeForAvailable: number = TimeRequirement[quest.QuestRepeatableType]
 			
@@ -1591,7 +1895,7 @@ function RoQuestServer:_LoadPlayerData(player: Player): ()
 		end
 	end
 
-	self.OnPlayerDataChanged:Fire(player, self:GetPlayerData(player))
+	self.OnPlayerDataChanged:Fire(player, self._PlayerQuestData[player])
 end
 
 --[=[
@@ -1612,9 +1916,9 @@ function RoQuestServer:_NewPlayerAvailableQuest(player: Player, questId: string)
 	end
 
 	if not self:CanGiveQuest(player, questId) then
-		if not self:GetQuest(player, questId) then
+		if not self:_GetQuest(player, questId) then
 			if not self._UnavailableQuests[player][questId] then
-				self._UnavailableQuests[player][questId] = true
+				self:_ChangeUnAvailableState(player, questId, true)
 				self.OnQuestUnavailable:Fire(player, questId)
 			end
 		end
@@ -1622,14 +1926,14 @@ function RoQuestServer:_NewPlayerAvailableQuest(player: Player, questId: string)
 	end
 
 	if self._UnavailableQuests[player][questId] then
-		self._UnavailableQuests[player][questId] = nil
+		self:_ChangeUnAvailableState(player, questId, nil)
 	end
 
 	if quest.QuestAcceptType == QuestAcceptType.Automatic then
 		self.OnQuestAvailable:Fire(player, questId)
 		self:GiveQuest(player, questId)
 	elseif not self._AvailableQuests[player][questId] then
-		self._AvailableQuests[player][questId] = true
+		self:_ChangeAvailableState(player, questId, true)
 		self.OnQuestAvailable:Fire(player, questId)
 	end
 end
@@ -1819,6 +2123,7 @@ function RoQuestServer:_PlayerAdded(player: Player): ()
 	self._PlayerQuestData[player] = PlayerQuestData {}
 
 	self:_LoadPlayerData(player)
+	self._LoadedChache[player] = true
 end
 
 --[=[
@@ -1839,6 +2144,7 @@ function RoQuestServer:_PlayerRemoving(player: Player): ()
 	self._UnavailableQuests[player] = nil
 	self._PlayerQuestData[player] = nil
 	self._Troves[player] = nil
+	self._LoadedChache[player] = nil
 end
 
 return RoQuestServer

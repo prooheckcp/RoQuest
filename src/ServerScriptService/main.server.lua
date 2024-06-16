@@ -12,18 +12,39 @@ RoQuest:Init(
     RoQuest:LoadDirectory(ReplicatedStorage.LifeCycles.Server)
 )
 
+--[[
+RoQuest.OnUnAvailableQuestChanged:Connect(function(...)
+    print("Unavailable Changed", ...)
+end)
+RoQuest.OnAvailableQuestChanged:Connect(function(...)
+    print("Available Changed", ...)
+end)
+RoQuest.OnCompletedQuestChanged:Connect(function(...)
+    print("Completed Changed", ...)
+end)
+RoQuest.OnDeliveredQuestChanged:Connect(function(...)
+    print("Delivered Changed", ...)
+end)
+RoQuest.OnInProgressQuestChanged:Connect(function(...)
+    print("In Progress Changed", ...)
+end)
+]]
+
+
 RoQuest.OnStart():andThen(function()
     local function playerAdded(player: Player)
-        local success, playerData = pcall(function()
+        local _success, playerData = pcall(function()
             return questsStore:GetAsync("player_"..player.UserId)
         end)
-
+   
+  
         if playerData then -- Set the data on RoQuest
             task.delay(2, function()
-                print("[test] Set player data!", playerData)
+                print("[test] Before Set", RoQuest:GetQuests(player))
                 RoQuest:SetPlayerData(player, playerData)
+                print("[test] After Set", RoQuest:GetQuests(player))
             end)
-        end
+        end        
     end
     
     local function playerRemoved(player: Player)

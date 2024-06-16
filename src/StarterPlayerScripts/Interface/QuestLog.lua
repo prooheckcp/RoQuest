@@ -146,10 +146,6 @@ function QuestLog:Init()
     
     RoQuest.OnPlayerDataChanged:Connect(function()
         self:SetAllScreens()
-
-        task.delay(2, function()
-            print("[test] with delay", RoQuest:GetQuests())
-        end)
     end) -- Hard reset our screens    
 end
 

@@ -89,7 +89,6 @@ end
 
 function Quests:Init()
     RoQuest.OnInProgressQuestChanged:Connect(function()
-        print("Progress changed!", RoQuest:GetQuests())
         self:UpdateInterface()
     end)
 
