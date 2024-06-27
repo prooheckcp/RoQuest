@@ -1259,7 +1259,7 @@ function RoQuestServer:GiveQuest(player: Player, questId: string): boolean
 	if not self:_GiveQuest(player, questId) then
 		return false
 	end
-	
+
 	self.OnQuestStarted:Fire(player, questId)
 
 	return true
@@ -1460,6 +1460,30 @@ function RoQuestServer:MakeQuestAvailable(player: Player, questId: string): ()
 		return
 	end
 
+	local function searchQuestStatus(id: string)
+		if not self._RequiredQuestPointer[id] then
+			return false
+		end
+
+		for pointerQuestId: string in self._RequiredQuestPointer[id] do
+			local pointerQuest: Quest? = self:GetQuest(player, pointerQuestId)
+
+			if not pointerQuest or pointerQuest:GetCompleteCount() < quest:GetCompleteCount() then
+				return true
+			end
+
+			if searchQuestStatus(pointerQuestId) then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	if searchQuestStatus(questId) then
+		return
+	end
+
 	quest._CanRepeatQuest = true
 	self:_NewPlayerAvailableQuest(player, questId)
 end
@@ -1540,15 +1564,9 @@ function RoQuestServer:_QuestDelivered(player: Player, questId: string): ()
 	if not quest then
 		return
 	end
-
+	
 	self:_ChangeCompletedQuest(player, questId, nil)
 	self:_ChangeDeliveredQuest(player, questId, quest:_GetQuestProgress())
-
-	if self._RequiredQuestPointer[questId] then
-		for requiredQuestId: string in self._RequiredQuestPointer[questId] do
-			self:_NewPlayerAvailableQuest(player, requiredQuestId)
-		end
-	end
 
 	if quest.QuestRepeatableType == QuestRepeatableType.Infinite then
 		self:MakeQuestAvailable(player, questId)
@@ -1557,7 +1575,15 @@ function RoQuestServer:_QuestDelivered(player: Player, questId: string): ()
 		self._Troves[player]:Add(task.delay(timeForAvailable - quest:GetTimeSinceCompleted(), self.MakeQuestAvailable, self, player, questId))
 	end
 
-	self:_NewPlayerAvailableQuest(player, questId)
+	if self._RequiredQuestPointer[questId] then
+		for requiredQuestId: string in self._RequiredQuestPointer[questId] do
+			self:_NewPlayerAvailableQuest(player, requiredQuestId)
+		end
+	end
+
+	for staticQuestId: string in self._StaticAvailableQuests do
+		self:MakeQuestAvailable(player, staticQuestId)
+	end
 end
 
 --[=[
@@ -1809,9 +1835,11 @@ function RoQuestServer:_GiveQuest(player: Player, questId: string, questProgress
 	self:_ChangeAvailableState(player, questId, nil)
 	self._Quests[player][questId] = questClone
 	self:_ChangeDeliveredQuest(player, questId, nil)
+
 	if STATUS_CHANGED_REFERENCE[questClone:GetQuestStatus()] then
 		self[STATUS_CHANGED_REFERENCE[questClone:GetQuestStatus()]](self, player, questId, questClone:_GetQuestProgress())
 	end
+
 	self._Troves[player]:Add(questClone)
 	for _, lifeCycleName: string in questClone.LifeCycles do
 		self:_CreateLifeCycle(player, questClone, lifeCycleName)
@@ -1916,7 +1944,7 @@ function RoQuestServer:_NewPlayerAvailableQuest(player: Player, questId: string)
 	if not quest then
 		return
 	end
-
+	
 	if not self:CanGiveQuest(player, questId) then
 		if not self:_GetQuest(player, questId) then
 			if not self._UnavailableQuests[player][questId] then
