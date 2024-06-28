@@ -539,6 +539,7 @@ function RoQuestClient:Init(lifeCycles: {QuestLifeCycle}?): ()
 	end)
 
 	net:On("OnQuestStarted", function(questId: string, questProgress: QuestProgress?)
+		self:_OnQuestAvailable(questId)
 		self:_OnQuestStarted(questId, questProgress)
 	end)
 
@@ -1013,6 +1014,11 @@ function RoQuestClient:_OnQuestObjectiveChanged(questId: string, objectiveId: st
 	end
 	
 	local quest: Quest? = self:GetQuest(questId)
+
+	if not quest then
+		return
+	end
+	
 	quest:SetObjective(objectiveId, newAmount)
 end
 
@@ -1244,7 +1250,7 @@ end
 
 	@return boolean -- If it managed to give the quest to the player or not
 ]=]
-function RoQuestClient:_GiveQuest(questId: string, questProgress: QuestProgress?): boolean
+function RoQuestClient:_GiveQuest(questId: string, questProgress: QuestProgress?): boolean	
 	-- We also check if the quest is available because of repeatable quests
 	if self:GetQuest(questId) and not self:CanGiveQuest(questId) then
 		return false
