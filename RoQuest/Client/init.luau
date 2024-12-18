@@ -982,14 +982,26 @@ function RoQuestClient:_OnPlayerDataChanged(playerQuestData: PlayerQuestData)
 	self._PlayerQuestData = playerQuestData
 	
 	for questId: string, questProgress: QuestProgress in playerQuestData.InProgress do
+		if not self._StaticQuests[questId] then
+			continue
+		end
+
 		self:_GiveQuest(questId, questProgress)
 	end
 
 	for questId: string, questProgress: QuestProgress in playerQuestData.Completed do
+		if not self._StaticQuests[questId] then
+			continue
+		end
+
 		self:_GiveQuest(questId, questProgress)
 	end
 
 	for questId: string, questProgress: QuestProgress in playerQuestData.Delivered do
+		if not self._StaticQuests[questId] then
+			continue
+		end
+		
 		self:_GiveQuest(questId, questProgress)
 	end
 
