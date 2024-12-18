@@ -1909,6 +1909,10 @@ function RoQuestServer:_LoadPlayerData(player: Player): ()
 
 	for _questStatus, questArray: {[string]: QuestProgress} in self._PlayerQuestData[player] do
 		for questId: string, questProgress: QuestProgress in questArray do
+			if not self._StaticQuests[questId] then
+				continue
+			end
+
 			self:_GiveQuest(player, questId, questProgress)
 		end
 	end
