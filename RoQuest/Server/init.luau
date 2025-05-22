@@ -1362,8 +1362,9 @@ function RoQuestServer:CancelQuest(player: Player, questId: string): boolean
 	quest.OnQuestCanceled:Fire()
 	self._Quests[player][questId] = nil
 	if STATUS_CHANGED_REFERENCE[quest:GetQuestStatus()] then
-		self[STATUS_CHANGED_REFERENCE[quest:GetQuestStatus()]](self, questId, nil)
+		self[STATUS_CHANGED_REFERENCE[quest:GetQuestStatus()]](self, player, questId, nil)
 	end
+
 	quest:Destroy()
 	self.OnQuestCancelled:Fire(player, questId)
 	task.defer(self._NewPlayerAvailableQuest, self, player, questId)
