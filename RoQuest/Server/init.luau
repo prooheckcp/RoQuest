@@ -1405,7 +1405,13 @@ function RoQuestServer:CanGiveQuest(player: Player, questId: string): boolean
 
 	local currentQuest: Quest? = self:_GetQuest(player, questId)
 	for _, requiredQuestId: string in quest.RequiredQuests do
-		if not self._PlayerQuestData[player].Delivered[requiredQuestId] then
+		-- self._PlayerQuestData[player].Delivered[requiredQuestId]
+		if 
+			not self._PlayerQuestData[player].Delivered[questId] and
+			not self._PlayerQuestData[player].Completed[questId] and
+		 	not self._PlayerQuestData[player].InProgress[questId] and 
+			not self._PlayerQuestData[player].Delivered[requiredQuestId] 
+		then
 			return false
 		end
 
